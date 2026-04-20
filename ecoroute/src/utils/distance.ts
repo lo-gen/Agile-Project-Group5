@@ -1,10 +1,10 @@
+import { EARTH_RADIUS_KM } from './constants'
+
 /** Coordinate pair for distance calculation. */
 interface Coord {
   lat: number;
   lng: number;
 }
-
-const EARTH_RADIUS_KM = 6371
 
 /**
  * Calculates the great-circle distance between two coordinates

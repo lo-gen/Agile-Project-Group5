@@ -21,6 +21,7 @@ export default function TravelClassSelector() {
           return (
             <button
               key={value}
+              type="button"
               onClick={() => setCabinClass(value)}
               className={[
                 'flex-1 py-2 text-sm rounded-md border transition-colors',

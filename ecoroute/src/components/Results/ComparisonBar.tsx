@@ -1,5 +1,6 @@
 import { useFlightContext } from '../../context/FlightContext'
-import { CAR_EMISSION_PER_KM, TRAIN_EMISSION_PER_KM } from '../../utils/constants'
+import { transportModes } from '../../data/transportModes'
+import { COLOR_FLIGHT } from '../../utils/constants'
 
 interface BarItem {
   label: string
@@ -31,10 +32,13 @@ export default function ComparisonBar() {
 
   const { co2Kg, distanceKm } = state.result
 
+  const carMode   = transportModes.find((m) => m.id === 'car')!
+  const trainMode = transportModes.find((m) => m.id === 'train')!
+
   const bars: BarItem[] = [
-    { label: 'Flight', co2Kg, color: '#ef4444' },
-    { label: 'Car', co2Kg: distanceKm * CAR_EMISSION_PER_KM, color: '#f97316' },
-    { label: 'Train', co2Kg: distanceKm * TRAIN_EMISSION_PER_KM, color: '#22c55e' },
+    { label: 'Flight', co2Kg,                                         color: COLOR_FLIGHT       },
+    { label: 'Car',    co2Kg: distanceKm * carMode.emissionPerKm,    color: carMode.color      },
+    { label: 'Train',  co2Kg: distanceKm * trainMode.emissionPerKm,  color: trainMode.color    },
   ]
 
   const maxCo2 = Math.max(...bars.map((b) => b.co2Kg))

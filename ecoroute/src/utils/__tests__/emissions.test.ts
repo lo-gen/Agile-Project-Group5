@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { calculateFlightEmissions } from '../emissions'
 import type { City } from '../../types'
+import { CAR_EMISSION_PER_KM, TRAIN_EMISSION_PER_KM, TREE_ABSORPTION_KG_PER_YEAR } from '../../utils/constants'
 
 const stockholm: City = {
   id: 'arn', name: 'Stockholm', country: 'Sweden',
@@ -53,13 +54,13 @@ describe('calculateFlightEmissions', () => {
 
   it('derives car and train equivalents', () => {
     const result = calculateFlightEmissions(lisbon, stockholm, 'economy')
-    expect(result.equivalentKmByCar).toBeCloseTo(result.co2Kg / 0.21, 0)
-    expect(result.equivalentKmByTrain).toBeCloseTo(result.co2Kg / 0.041, 0)
+    expect(result.equivalentKmByCar).toBeCloseTo(result.co2Kg / CAR_EMISSION_PER_KM, 0)
+    expect(result.equivalentKmByTrain).toBeCloseTo(result.co2Kg / TRAIN_EMISSION_PER_KM, 0)
   })
 
   it('derives trees needed to offset (ceiling)', () => {
     const result = calculateFlightEmissions(stockholm, london, 'economy')
-    expect(result.treesNeededToOffset).toBe(Math.ceil(result.co2Kg / 21))
+    expect(result.treesNeededToOffset).toBe(Math.ceil(result.co2Kg / TREE_ABSORPTION_KG_PER_YEAR))
   })
 
   it('returns cabinClass in result', () => {

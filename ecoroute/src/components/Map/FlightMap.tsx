@@ -6,12 +6,14 @@ import type { City } from '../../types'
 import {
   MAP_CENTER_LAT, MAP_CENTER_LNG, MAP_DEFAULT_ZOOM,
   MARKER_RADIUS_DEFAULT, MARKER_RADIUS_SELECTED,
+  COLOR_ORIGIN, COLOR_DESTINATION, COLOR_UNSELECTED,
+  COLOR_PANEL_BG, MARKER_STROKE_WEIGHT, TOOLTIP_OFFSET_Y,
 } from '../../utils/constants'
 
 function cityColor(city: City, origin: City | null, destination: City | null): string {
-  if (city.id === origin?.id)      return '#22c55e'
-  if (city.id === destination?.id) return '#ef4444'
-  return '#94a3b8'
+  if (city.id === origin?.id)      return COLOR_ORIGIN
+  if (city.id === destination?.id) return COLOR_DESTINATION
+  return COLOR_UNSELECTED
 }
 
 export default function FlightMap() {
@@ -58,12 +60,12 @@ export default function FlightMap() {
             pathOptions={{
               fillColor: cityColor(city, origin, destination),
               fillOpacity: 1,
-              color: '#0f1117',
-              weight: 1,
+              color: COLOR_PANEL_BG,
+              weight: MARKER_STROKE_WEIGHT,
             }}
             eventHandlers={{ click: () => handleCityClick(city) }}
           >
-            <Tooltip direction="top" offset={[0, -6]}>
+            <Tooltip direction="top" offset={[0, TOOLTIP_OFFSET_Y]}>
               {city.name} ({city.iata})
             </Tooltip>
           </CircleMarker>

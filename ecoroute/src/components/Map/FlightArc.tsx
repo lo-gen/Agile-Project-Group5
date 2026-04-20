@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Polyline, Marker } from 'react-leaflet'
 import L from 'leaflet'
 import type { City } from '../../types'
-import { ARC_POINT_COUNT, ARC_ANIMATION_MS, PLANE_DELAY_MS } from '../../utils/constants'
+import { ARC_POINT_COUNT, ARC_ANIMATION_MS, PLANE_DELAY_MS, PLANE_ICON_ANCHOR, COLOR_ARC, ARC_STROKE_WEIGHT, ARC_STROKE_OPACITY } from '../../utils/constants'
 
 interface Props {
   origin: City
@@ -27,7 +27,7 @@ function interpolateArc(
 const planeIcon = L.divIcon({
   html: '<span style="font-size:18px;line-height:1;">✈</span>',
   className: '',
-  iconAnchor: [9, 9],
+  iconAnchor: [PLANE_ICON_ANCHOR, PLANE_ICON_ANCHOR],
 })
 
 export default function FlightArc({ origin, destination }: Props) {
@@ -66,7 +66,7 @@ export default function FlightArc({ origin, destination }: Props) {
       <Polyline
         ref={polylineRef}
         positions={points}
-        pathOptions={{ color: '#22c55e', weight: 2, opacity: 0.85 }}
+        pathOptions={{ color: COLOR_ARC, weight: ARC_STROKE_WEIGHT, opacity: ARC_STROKE_OPACITY }}
       />
       {showPlane && (
         <Marker position={midPoint} icon={planeIcon} />
