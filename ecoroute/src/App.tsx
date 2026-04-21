@@ -1,24 +1,54 @@
-import CitySelector         from './components/Controls/CitySelector'
-import TravelClassSelector  from './components/Controls/TravelClassSelector'
-import EmissionsCard        from './components/Results/EmissionsCard'
-import ComparisonBar        from './components/Results/ComparisonBar'
-import FlightMap            from './components/Map/FlightMap'
+import CitySelector from './components/Controls/CitySelector'
+import TravelClassSelector from './components/Controls/TravelClassSelector'
+import EmissionsCard from './components/Results/EmissionsCard'
+import ComparisonBar from './components/Results/ComparisonBar'
+import FlightMap from './components/Map/FlightMap'
+import AffiliateProgramPage from './pages/AffiliateProgramPage'
 
-function LeafIcon() {
-  return <span aria-hidden="true">🌿</span>
+function BrandIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-eco-green text-xs font-bold text-eco-bg"
+    >
+      ER
+    </span>
+  )
+}
+
+function normalizePathname(pathname: string) {
+  if (!pathname || pathname === '/') {
+    return '/'
+  }
+
+  return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
 }
 
 export default function App() {
+  const pathname = normalizePathname(window.location.pathname)
+
+  if (pathname === '/affiliate') {
+    return <AffiliateProgramPage />
+  }
+
   return (
-    <div className="flex h-screen w-screen bg-eco-bg font-sans overflow-hidden">
-      {/* Left panel */}
-      <aside className="w-[35%] h-full flex flex-col gap-4 p-5 bg-eco-panel border-r border-eco-border overflow-y-auto">
-        {/* Header */}
+    <div className="flex h-screen w-screen overflow-hidden bg-eco-bg font-sans">
+      <aside className="flex h-full w-[35%] flex-col gap-4 overflow-y-auto border-r border-eco-border bg-eco-panel p-5">
         <header>
-          <h1 className="text-2xl font-semibold text-eco-text flex items-center gap-2">
-            <LeafIcon /> EcoRoute
-          </h1>
-          <p className="text-sm text-eco-muted mt-1">Calculate your flight emissions</p>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="flex items-center gap-2 text-2xl font-semibold text-eco-text">
+              <BrandIcon />
+              EcoRoute
+            </h1>
+
+            <a
+              href="/affiliate"
+              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
+            >
+              Join affiliate
+            </a>
+          </div>
+          <p className="mt-2 text-sm text-eco-muted">Calculate your flight emissions</p>
         </header>
 
         <hr className="border-eco-border" />
@@ -30,8 +60,7 @@ export default function App() {
         <ComparisonBar />
       </aside>
 
-      {/* Right panel — map */}
-      <main className="w-[65%] h-full">
+      <main className="h-full w-[65%]">
         <FlightMap />
       </main>
     </div>
