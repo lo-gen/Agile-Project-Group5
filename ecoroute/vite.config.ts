@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/agile_deploy_test/',
+  base: '/Agile-Project-Group5/',
 
   test: {
     globals: true,
