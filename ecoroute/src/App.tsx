@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import CitySelector from './components/Controls/CitySelector'
 import TravelClassSelector from './components/Controls/TravelClassSelector'
 import EmissionsCard from './components/Results/EmissionsCard'
 import ComparisonBar from './components/Results/ComparisonBar'
 import FlightMap from './components/Map/FlightMap'
 import AffiliateProgramPage from './pages/AffiliateProgramPage'
+import AboutPage from './pages/AboutPage'
 
 function BrandIcon() {
   return (
@@ -16,19 +18,33 @@ function BrandIcon() {
   )
 }
 
-function normalizePathname(pathname: string) {
-  if (!pathname || pathname === '/') {
+function getHashRoute(hash: string) {
+  if (!hash || hash === '#/' || hash === '#') {
     return '/'
   }
 
-  return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
+  const route = hash.startsWith('#') ? hash.slice(1) : hash
+  return route.startsWith('/') ? route : `/${route}`
 }
 
 export default function App() {
-  const pathname = normalizePathname(window.location.pathname)
+  const [route, setRoute] = useState(() => getHashRoute(window.location.hash))
 
-  if (pathname === '/affiliate') {
+  useEffect(() => {
+    const handleHashChange = () => {
+      setRoute(getHashRoute(window.location.hash))
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  if (route === '/affiliate') {
     return <AffiliateProgramPage />
+  }
+
+  if (route === '/about') {
+    return <AboutPage />
   }
 
   return (
@@ -42,7 +58,13 @@ export default function App() {
             </h1>
 
             <a
-              href="/affiliate"
+              href="#/about"
+              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
+            >
+              About page
+            </a>
+            <a
+              href="#/affiliate"
               className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
             >
               Join affiliate

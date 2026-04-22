@@ -58,7 +58,7 @@ export default function AffiliateProgramPage() {
           </div>
 
           <a
-            href="/"
+            href="#/"
             className="mt-8 inline-flex rounded-md border border-eco-border px-4 py-2 text-sm font-medium transition hover:border-eco-green hover:text-eco-green"
           >
             Back to emissions calculator
