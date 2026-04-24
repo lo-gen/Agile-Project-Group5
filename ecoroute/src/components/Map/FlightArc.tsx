@@ -1,12 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { Polyline, Marker } from 'react-leaflet'
 import L from 'leaflet'
-import type { City } from '../../types'
-import { ARC_POINT_COUNT, ARC_ANIMATION_MS, PLANE_DELAY_MS, PLANE_ICON_ANCHOR, COLOR_ARC, ARC_STROKE_WEIGHT, ARC_STROKE_OPACITY } from '../../utils/constants'
+import type { City, TransportModeId } from '../../types'
+import {
+  ARC_POINT_COUNT,
+  ARC_ANIMATION_MS,
+  PLANE_DELAY_MS,
+  PLANE_ICON_ANCHOR,
+  COLOR_ARC,
+  COLOR_CAR,
+  COLOR_TRAIN,
+  ARC_STROKE_WEIGHT,
+  ARC_STROKE_OPACITY,
+} from '../../utils/constants'
 
 interface Props {
   origin: City
   destination: City
+  mode: TransportModeId
 }
 
 /** Interpolates `count` lat/lng points along a great-circle approximation. */
@@ -30,7 +41,7 @@ const planeIcon = L.divIcon({
   iconAnchor: [PLANE_ICON_ANCHOR, PLANE_ICON_ANCHOR],
 })
 
-export default function FlightArc({ origin, destination }: Props) {
+export default function FlightArc({ origin, destination, mode }: Props) {
   const polylineRef = useRef<L.Polyline>(null)
   const [showPlane, setShowPlane] = useState(false)
 
@@ -42,7 +53,6 @@ export default function FlightArc({ origin, destination }: Props) {
     const line = polylineRef.current
     if (!line) return
 
-    // Access the underlying SVG path element
     const path = (line as unknown as { _path: SVGPathElement | undefined })._path
     if (!path) return
 
@@ -51,7 +61,6 @@ export default function FlightArc({ origin, destination }: Props) {
     path.style.strokeDasharray  = `${length}`
     path.style.strokeDashoffset = `${length}`
 
-    // Force reflow so the browser registers the initial state
     path.getBoundingClientRect()
 
     path.style.transition = `stroke-dashoffset ${ARC_ANIMATION_MS}ms ease-in-out`
@@ -61,14 +70,19 @@ export default function FlightArc({ origin, destination }: Props) {
     return () => clearTimeout(timer)
   }, [origin.id, destination.id])
 
+  const color =
+    mode === 'car' ? COLOR_CAR :
+    mode === 'train' ? COLOR_TRAIN :
+    COLOR_ARC
+
   return (
     <>
       <Polyline
         ref={polylineRef}
         positions={points}
-        pathOptions={{ color: COLOR_ARC, weight: ARC_STROKE_WEIGHT, opacity: ARC_STROKE_OPACITY }}
+        pathOptions={{ color, weight: ARC_STROKE_WEIGHT, opacity: ARC_STROKE_OPACITY }}
       />
-      {showPlane && (
+      {mode === 'flight' && showPlane && (
         <Marker position={midPoint} icon={planeIcon} />
       )}
     </>

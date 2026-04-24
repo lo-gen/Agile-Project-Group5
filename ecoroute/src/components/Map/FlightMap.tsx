@@ -10,33 +10,33 @@ import {
   COLOR_PANEL_BG, MARKER_STROKE_WEIGHT, TOOLTIP_OFFSET_Y,
 } from '../../utils/constants'
 
-function cityColor(city: City, origin: City | null, destination: City | null): string {
-  if (city.id === origin?.id)      return COLOR_ORIGIN
-  if (city.id === destination?.id) return COLOR_DESTINATION
-  return COLOR_UNSELECTED
+function cityColor(city: City, selectedIds: Set<string>): string {
+  return selectedIds.has(city.id) ? COLOR_ORIGIN : COLOR_UNSELECTED
 }
 
 export default function FlightMap() {
-  const { state, setOrigin, setDestination } = useFlightContext()
-  const { origin, destination } = state
+  const {
+    state,
+    setLegOrigin,
+    setLegDestination,
+  } = useFlightContext()
+
+  const selectedCityIds = new Set(
+    state.legs.flatMap((leg) => [leg.origin?.id, leg.destination?.id].filter(Boolean)),
+  )
 
   function handleCityClick(city: City) {
-    if (city.id === origin?.id) {
-      setOrigin(null)
+    const incompleteLeg = state.legs.find((leg) => !leg.origin || !leg.destination)
+    if (!incompleteLeg) return
+
+    if (!incompleteLeg.origin) {
+      setLegOrigin(incompleteLeg.id, city)
       return
     }
-    if (city.id === destination?.id) {
-      setDestination(null)
-      return
-    }
-    if (!origin) {
-      setOrigin(city)
-    } else {
-      setDestination(city)
+    if (!incompleteLeg.destination) {
+      setLegDestination(incompleteLeg.id, city)
     }
   }
-
-  const arcKey = origin && destination ? `${origin.id}-${destination.id}` : null
 
   return (
     <MapContainer
@@ -51,14 +51,14 @@ export default function FlightMap() {
       />
 
       {cities.map((city) => {
-        const isSelected = city.id === origin?.id || city.id === destination?.id
+        const isSelected = selectedCityIds.has(city.id)
         return (
           <CircleMarker
             key={city.id}
             center={[city.lat, city.lng]}
             radius={isSelected ? MARKER_RADIUS_SELECTED : MARKER_RADIUS_DEFAULT}
             pathOptions={{
-              fillColor: cityColor(city, origin, destination),
+              fillColor: cityColor(city, selectedCityIds),
               fillOpacity: 1,
               color: COLOR_PANEL_BG,
               weight: MARKER_STROKE_WEIGHT,
@@ -72,8 +72,15 @@ export default function FlightMap() {
         )
       })}
 
-      {origin && destination && arcKey && (
-        <FlightArc key={arcKey} origin={origin} destination={destination} />
+      {state.legs.map((leg) =>
+        leg.origin && leg.destination ? (
+          <FlightArc
+            key={leg.id}
+            origin={leg.origin}
+            destination={leg.destination}
+            mode={leg.mode}
+          />
+        ) : null,
       )}
     </MapContainer>
   )

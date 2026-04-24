@@ -5,6 +5,8 @@ export const RFI_MULTIPLIER             = 2.7;
 export const DETOUR_FACTOR_KM           = 95;
 export const CAR_EMISSION_PER_KM        = 0.21;
 export const TRAIN_EMISSION_PER_KM      = 0.041;
+export const CAR_SPEED_KMH              = 90;
+export const TRAIN_SPEED_KMH            = 110;
 export const TREE_ABSORPTION_KG_PER_YEAR = 21;
 
 export const CABIN_CLASS_MULTIPLIERS = {

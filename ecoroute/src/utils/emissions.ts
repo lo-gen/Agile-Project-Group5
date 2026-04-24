@@ -9,23 +9,28 @@ import {
   RFI_MULTIPLIER,
   CAR_EMISSION_PER_KM,
   TRAIN_EMISSION_PER_KM,
+  CAR_SPEED_KMH,
+  TRAIN_SPEED_KMH,
   TREE_ABSORPTION_KG_PER_YEAR,
 } from './constants'
 
 /**
- * Calculates CO2 emissions for a flight between two cities.
- *
- * Methodology: ICAO Carbon Emissions Calculator approach.
- * 1. Great-circle distance (Haversine) + 95 km detour factor
- * 2. Emission factor by haul type (short < 1500 km, long ≥ 1500 km)
- * 3. Cabin class multiplier (economy 1×, business 1.5×, first 2×)
- * 4. Radiative Forcing Index of 2.7 for non-CO2 altitude effects
- *
- * @param origin - Departure city
- * @param destination - Arrival city
- * @param cabinClass - Passenger cabin class
- * @returns Detailed emissions result with equivalents
+ * Estimates flight time based on distance.
+ * Short distances fly slower, long haul cruises faster.
  */
+function estimateFlightHours(distanceKm: number): number {
+  if (distanceKm <= 0) return 0
+
+  const minSpeed = 500
+  const maxSpeed = 830
+  const scale = 1200
+
+  const effectiveSpeedKmh =
+    maxSpeed - (maxSpeed - minSpeed) * Math.exp(-distanceKm / scale)
+
+  return distanceKm / effectiveSpeedKmh
+}
+
 export function calculateFlightEmissions(
   origin: City,
   destination: City,
@@ -45,6 +50,7 @@ export function calculateFlightEmissions(
 
   return {
     distanceKm,
+    durationHours: estimateFlightHours(distanceKm),
     co2Kg,
     co2KgPerKm,
     cabinClass,
@@ -54,26 +60,37 @@ export function calculateFlightEmissions(
   }
 }
 
-/**
- * Placeholder for future car emissions calculation.
- * @param _origin - Departure city
- * @param _destination - Arrival city
- */
-export function calculateCarEmissions(
-  _origin: City,
-  _destination: City,
+function calculateGroundEmissions(
+  origin: City,
+  destination: City,
+  emissionPerKm: number,
+  speedKmh: number,
 ): EmissionsResult {
-  throw new Error('calculateCarEmissions is not yet implemented')
+  const distanceKm = haversineDistanceKm(origin, destination)
+  const co2Kg = distanceKm * emissionPerKm
+
+  return {
+    distanceKm,
+    durationHours: distanceKm / speedKmh,
+    co2Kg,
+    co2KgPerKm: emissionPerKm,
+    cabinClass: 'economy',
+    equivalentKmByCar:   co2Kg / CAR_EMISSION_PER_KM,
+    equivalentKmByTrain: co2Kg / TRAIN_EMISSION_PER_KM,
+    treesNeededToOffset: Math.ceil(co2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+  }
 }
 
-/**
- * Placeholder for future train emissions calculation.
- * @param _origin - Departure city
- * @param _destination - Arrival city
- */
-export function calculateTrainEmissions(
-  _origin: City,
-  _destination: City,
+export function calculateCarEmissions(
+  origin: City,
+  destination: City,
 ): EmissionsResult {
-  throw new Error('calculateTrainEmissions is not yet implemented')
+  return calculateGroundEmissions(origin, destination, CAR_EMISSION_PER_KM, CAR_SPEED_KMH)
+}
+
+export function calculateTrainEmissions(
+  origin: City,
+  destination: City,
+): EmissionsResult {
+  return calculateGroundEmissions(origin, destination, TRAIN_EMISSION_PER_KM, TRAIN_SPEED_KMH)
 }

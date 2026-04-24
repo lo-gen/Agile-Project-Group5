@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateFlightEmissions } from '../emissions'
+import { calculateFlightEmissions, calculateCarEmissions, calculateTrainEmissions } from '../emissions'
 import type { City } from '../../types'
 import { CAR_EMISSION_PER_KM, TRAIN_EMISSION_PER_KM, TREE_ABSORPTION_KG_PER_YEAR } from '../../utils/constants'
 
@@ -66,5 +66,17 @@ describe('calculateFlightEmissions', () => {
   it('returns cabinClass in result', () => {
     const result = calculateFlightEmissions(stockholm, london, 'business')
     expect(result.cabinClass).toBe('business')
+  })
+
+  it('calculates car emissions using the car factor', () => {
+    const result = calculateCarEmissions(stockholm, london)
+    expect(result.co2Kg).toBeCloseTo(result.distanceKm * CAR_EMISSION_PER_KM, 5)
+    expect(result.cabinClass).toBe('economy')
+  })
+
+  it('calculates train emissions using the train factor', () => {
+    const result = calculateTrainEmissions(stockholm, london)
+    expect(result.co2Kg).toBeCloseTo(result.distanceKm * TRAIN_EMISSION_PER_KM, 5)
+    expect(result.cabinClass).toBe('economy')
   })
 })
