@@ -24,13 +24,20 @@ export interface FlightState {
   destination: City | null;
   cabinClass: CabinClass;
   result: EmissionsResult | null;
+  flightHistory: SavedFlight[] | null;
+  isLoadingHistory: boolean;
 }
 
 export type FlightAction =
   | { type: 'SET_ORIGIN'; payload: City | null }
   | { type: 'SET_DESTINATION'; payload: City | null }
   | { type: 'SET_CABIN_CLASS'; payload: CabinClass }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SET_FLIGHT_HISTORY'; payload: SavedFlight[] }
+  | { type: 'SET_LOADING_HISTORY'; payload: boolean }
+  | { type: 'ADD_TO_HISTORY'; payload: SavedFlight }
+  | { type: 'REMOVE_FROM_HISTORY'; payload: string }
+  | { type: 'CLEAR_HISTORY' };
 
 export interface TransportMode {
   id: string;
