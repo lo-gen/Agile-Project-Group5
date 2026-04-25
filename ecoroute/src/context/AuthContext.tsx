@@ -53,10 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null)
     setIsLoading(true)
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
       if (signInError) throw signInError
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed'
@@ -71,11 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null)
     setIsLoading(true)
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      })
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
       if (signUpError) throw signUpError
+      // If session is null, email confirmation is required
+      if (!data.session) {
+        throw new Error('Check your email to confirm your account before logging in.')
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Signup failed'
       setError(message)
