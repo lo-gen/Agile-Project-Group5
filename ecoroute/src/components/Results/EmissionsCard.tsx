@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useFlightContext } from '../../context/FlightContext'
+import { useAuth } from '../../context/AuthContext'
 
 function fmt(n: number, decimals = 0): string {
   return n.toLocaleString('en-GB', { maximumFractionDigits: decimals })
@@ -35,7 +37,23 @@ function estimateAirborneHours(distanceKm: number): number {
 
 
 export default function EmissionsCard() {
-  const { state } = useFlightContext()
+  const { state, saveFlightToHistory } = useFlightContext()
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (user && state.result && state.origin && state.destination) {
+      saveFlightToHistory(
+        state.origin.name,
+        state.destination.name,
+        state.cabinClass,
+        state.result.totalEmissions,
+        state.result.distance,
+      ).catch((err) => {
+        console.error('Failed to save flight:', err)
+      })
+    }
+  }, [state.result?.totalEmissions, user?.id, state.origin?.name, state.destination?.name, state.cabinClass, saveFlightToHistory])
+
   if (!state.result) return null
 
   const { co2Kg, distanceKm, equivalentKmByCar, treesNeededToOffset } = state.result
