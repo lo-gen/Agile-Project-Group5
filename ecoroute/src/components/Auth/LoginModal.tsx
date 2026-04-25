@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '../../context/AuthContext'
 
 interface LoginModalProps {
@@ -36,8 +37,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-sm rounded-lg bg-eco-panel p-6 shadow-lg">
         <div className="mb-6 flex gap-2 border-b border-eco-border">
           <button
@@ -115,6 +116,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
