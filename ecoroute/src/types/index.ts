@@ -38,3 +38,38 @@ export interface TransportMode {
   emissionPerKm: number;
   color: string;
 }
+
+// Auth types
+export interface AuthUser {
+  id: string
+  email: string
+}
+
+export interface AuthContextValue {
+  user: AuthUser | null
+  isLoading: boolean
+  error: string | null
+  login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+}
+
+// Flight history types
+export interface SavedFlight {
+  id: string
+  origin_city: string
+  destination_city: string
+  cabin_class: CabinClass
+  emissions_kg: number
+  distance_km: number
+  created_at: string
+}
+
+export interface FlightHistoryContextValue {
+  flightHistory: SavedFlight[] | null
+  isLoadingHistory: boolean
+  saveFlightToHistory: (flight: Omit<SavedFlight, 'id' | 'created_at'>) => Promise<void>
+  deleteFlightFromHistory: (id: string) => Promise<void>
+  clearFlightHistory: () => Promise<void>
+  reloadHistory: () => Promise<void>
+}
