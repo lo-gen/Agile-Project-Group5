@@ -46,13 +46,13 @@ export default function EmissionsCard() {
         state.origin.name,
         state.destination.name,
         state.cabinClass,
-        state.result.totalEmissions,
-        state.result.distance,
+        state.result.co2Kg,
+        state.result.distanceKm,
       ).catch((err) => {
         console.error('Failed to save flight:', err)
       })
     }
-  }, [state.result?.totalEmissions, user?.id, state.origin?.name, state.destination?.name, state.cabinClass, saveFlightToHistory])
+  }, [state.result?.co2Kg, user?.id, state.origin?.name, state.destination?.name, state.cabinClass, saveFlightToHistory])
 
   if (!state.result) return null
 

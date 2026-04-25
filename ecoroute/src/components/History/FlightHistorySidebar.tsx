@@ -1,4 +1,5 @@
 // ecoroute/src/components/History/FlightHistorySidebar.tsx
+import type { SavedFlight } from '../../types'
 import { useAuth } from '../../context/AuthContext'
 import { useFlightHistory } from '../../hooks/useFlightHistory'
 import { useFlightContext } from '../../context/FlightContext'
@@ -8,16 +9,16 @@ import FlightHistoryItem from './FlightHistoryItem'
 export default function FlightHistorySidebar() {
   const { user } = useAuth()
   const { flightHistory, reloadHistory } = useFlightHistory()
-  const { state, setOrigin, setDestination, setCabinClass, clearHistory } = useFlightContext()
+  const { setOrigin, setDestination, setCabinClass, clearHistory } = useFlightContext()
 
   if (!user) return null
 
-  const handleFlightClick = async (flight: (typeof state.flightHistory)?.[0]) => {
+  const handleFlightClick = async (flight: SavedFlight) => {
     if (!flight) return
     // Find cities in data to get full city data
     // For now, just set the name - coordinates will be looked up if needed
-    setOrigin({ name: flight.origin_city, lat: 0, lon: 0 })
-    setDestination({ name: flight.destination_city, lat: 0, lon: 0 })
+    setOrigin({ id: '', name: flight.origin_city, country: '', iata: '', lat: 0, lng: 0 })
+    setDestination({ id: '', name: flight.destination_city, country: '', iata: '', lat: 0, lng: 0 })
     setCabinClass(flight.cabin_class)
   }
 
