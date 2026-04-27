@@ -6,6 +6,9 @@ import ComparisonBar from './components/Results/ComparisonBar'
 import FlightMap from './components/Map/FlightMap'
 import AffiliateProgramPage from './pages/AffiliateProgramPage'
 import AboutPage from './pages/AboutPage'
+import AuthButton from './components/Auth/AuthButton'
+import LoginModal from './components/Auth/LoginModal'
+import FlightHistorySidebar from './components/History/FlightHistorySidebar'
 
 function BrandIcon() {
   return (
@@ -29,6 +32,7 @@ function getHashRoute(hash: string) {
 
 export default function App() {
   const [route, setRoute] = useState(() => getHashRoute(window.location.hash))
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -57,18 +61,21 @@ export default function App() {
               EcoRoute
             </h1>
 
-            <a
-              href="#/about"
-              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
-            >
-              About page
-            </a>
-            <a
-              href="#/affiliate"
-              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
-            >
-              Join affiliate
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href="#/about"
+                className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
+              >
+                About page
+              </a>
+              <a
+                href="#/affiliate"
+                className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
+              >
+                Join affiliate
+              </a>
+              <AuthButton onLoginClick={() => setLoginModalOpen(true)} />
+            </div>
           </div>
           <p className="mt-2 text-sm text-eco-muted">Calculate your flight emissions</p>
         </header>
@@ -80,11 +87,15 @@ export default function App() {
 
         <EmissionsCard />
         <ComparisonBar />
+
+        <FlightHistorySidebar />
       </aside>
 
       <main className="h-full w-[65%]">
         <FlightMap />
       </main>
+
+      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </div>
   )
 }

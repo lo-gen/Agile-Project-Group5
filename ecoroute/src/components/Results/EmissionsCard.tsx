@@ -36,6 +36,7 @@ function estimateAirborneHours(distanceKm: number): number {
 
 export default function EmissionsCard() {
   const { state } = useFlightContext()
+
   if (!state.result) return null
 
   const { co2Kg, distanceKm, equivalentKmByCar, treesNeededToOffset } = state.result
