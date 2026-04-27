@@ -1,6 +1,6 @@
-import { useFlightContext } from '../../context/FlightContext'
-import { transportModes } from '../../data/transportModes'
-import { COLOR_FLIGHT } from '../../utils/constants'
+import { useFlightContext } from '../context/FlightContext'
+import { transportModes } from '../data/transportModes'
+import { COLOR_FLIGHT } from '../utils/constants'
 
 interface BarItem {
   label: string

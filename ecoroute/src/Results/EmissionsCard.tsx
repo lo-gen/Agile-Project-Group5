@@ -1,5 +1,5 @@
-import { useFlightContext } from '../../context/FlightContext'
-import type { LegEmission } from '../../types'
+import { useFlightContext } from '../context/FlightContext'
+import type { LegEmission } from '../types'
 
 function fmt(n: number, decimals = 0): string {
   return n.toLocaleString('en-GB', { maximumFractionDigits: decimals })
@@ -26,7 +26,7 @@ export default function EmissionsCard() {
 
   const { co2Kg, distanceKm, durationHours, equivalentKmByCar, treesNeededToOffset, legs } = state.result
   const flightLegsDistance = legs?.reduce(
-    (sum, leg) => sum + (leg.mode === 'flight' ? leg.distanceKm : 0),
+    (sum: number, leg: any) => sum + (leg.mode === 'flight' ? leg.distanceKm : 0),
     0,
   ) ?? 0
 

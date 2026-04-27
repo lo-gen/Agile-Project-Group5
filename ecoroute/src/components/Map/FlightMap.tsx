@@ -6,7 +6,7 @@ import type { City } from '../../types'
 import {
   MAP_CENTER_LAT, MAP_CENTER_LNG, MAP_DEFAULT_ZOOM,
   MARKER_RADIUS_DEFAULT, MARKER_RADIUS_SELECTED,
-  COLOR_ORIGIN, COLOR_DESTINATION, COLOR_UNSELECTED,
+  COLOR_ORIGIN, COLOR_UNSELECTED,
   COLOR_PANEL_BG, MARKER_STROKE_WEIGHT, TOOLTIP_OFFSET_Y,
 } from '../../utils/constants'
 
@@ -22,7 +22,7 @@ export default function FlightMap() {
   } = useFlightContext()
 
   const selectedCityIds = new Set(
-    state.legs.flatMap((leg) => [leg.origin?.id, leg.destination?.id].filter(Boolean)),
+    state.legs.flatMap((leg) => [leg.origin?.id, leg.destination?.id]).filter((id): id is string => id !== undefined),
   )
 
   function handleCityClick(city: City) {
