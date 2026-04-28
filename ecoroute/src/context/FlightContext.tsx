@@ -11,11 +11,12 @@ const initialState: FlightState = {
   result:           null,
   flightHistory:    null,
   isLoadingHistory: false,
+  groupSize: 1
 }
 
 function deriveResult(state: FlightState): FlightState['result'] {
   if (state.origin && state.destination) {
-    return calculateFlightEmissions(state.origin, state.destination, state.cabinClass)
+    return calculateFlightEmissions(state.origin, state.destination, state.cabinClass, state.groupSize)
   }
   return null
 }
@@ -34,6 +35,13 @@ function flightReducer(state: FlightState, action: FlightAction): FlightState {
       const next = { ...state, cabinClass: action.payload }
       return { ...next, result: deriveResult(next) }
     }
+
+    case 'SET_GROUP_SIZE' : {
+      const safeGroupSize = Math.max(1, Math.floor(action.payload))
+      const next = {...state, groupSize: safeGroupSize}
+      return{...next,result: deriveResult(next)}
+    }
+
     case 'RESET':
       return initialState
     case 'SET_FLIGHT_HISTORY':
@@ -57,6 +65,8 @@ function flightReducer(state: FlightState, action: FlightAction): FlightState {
 
 interface FlightContextValue {
   state: FlightState
+  setGroupSize: (size: number) => void
+ 
   setOrigin: (city: City | null) => void
   setDestination: (city: City | null) => void
   setCabinClass: (cls: CabinClass) => void
@@ -111,6 +121,8 @@ export function FlightProvider({ children }: { children: ReactNode }) {
   return (
     <FlightContext.Provider value={{
       state,
+      setGroupSize: (size) => dispatch({ type: 'SET_GROUP_SIZE', payload: size }),
+
       setOrigin:        (city) => dispatch({ type: 'SET_ORIGIN',        payload: city }),
       setDestination:   (city) => dispatch({ type: 'SET_DESTINATION',   payload: city }),
       setCabinClass:    (cls)  => dispatch({ type: 'SET_CABIN_CLASS',   payload: cls  }),

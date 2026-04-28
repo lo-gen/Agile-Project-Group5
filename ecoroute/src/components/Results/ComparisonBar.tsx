@@ -30,15 +30,15 @@ export default function ComparisonBar() {
   const { state } = useFlightContext()
   if (!state.result) return null
 
-  const { co2Kg, distanceKm } = state.result
+  const { totalCo2Kg, distanceKm, groupSize } = state.result
 
   const carMode   = transportModes.find((m) => m.id === 'car')!
   const trainMode = transportModes.find((m) => m.id === 'train')!
 
   const bars: BarItem[] = [
-    { label: 'Flight', co2Kg,                                         color: COLOR_FLIGHT       },
-    { label: 'Car',    co2Kg: distanceKm * carMode.emissionPerKm,    color: carMode.color      },
-    { label: 'Train',  co2Kg: distanceKm * trainMode.emissionPerKm,  color: trainMode.color    },
+    { label: 'Flight', co2Kg: totalCo2Kg,                                         color: COLOR_FLIGHT    },
+    { label: 'Car',    co2Kg: distanceKm * carMode.emissionPerKm * groupSize,     color: carMode.color   },
+    { label: 'Train',  co2Kg: distanceKm * trainMode.emissionPerKm * groupSize,   color: trainMode.color },
   ]
 
   const maxCo2 = Math.max(...bars.map((b) => b.co2Kg))
