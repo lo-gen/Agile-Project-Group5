@@ -21,7 +21,7 @@ function CityDropdown({
         {label}
       </label>
       <select
-        className="w-full bg-eco-bg border border-eco-border text-eco-text rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
+        className="w-full bg-eco-bg border border-eco-border text-eco-text rounded-md px-1 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
         value={value?.id ?? ''}
         onChange={(e) => {
           const selected = cities.find((c) => c.id === e.target.value) ?? null
@@ -43,7 +43,7 @@ export default function CitySelector() {
   const { state, setOrigin, setDestination } = useFlightContext()
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-row gap-3">
       <CityDropdown
         label="From"
         value={state.origin}

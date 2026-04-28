@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import CitySelector from './components/Controls/CitySelector'
 import TravelClassSelector from './components/Controls/TravelClassSelector'
+import JourneyOptions from './components/Results/JourneyOptions'
 import EmissionsCard from './components/Results/EmissionsCard'
 import ComparisonBar from './components/Results/ComparisonBar'
 import FlightMap from './components/Map/FlightMap'
@@ -9,6 +10,7 @@ import AboutPage from './pages/AboutPage'
 import AuthButton from './components/Auth/AuthButton'
 import LoginModal from './components/Auth/LoginModal'
 import FlightHistorySidebar from './components/History/FlightHistorySidebar'
+import { useJourneyContext } from './context/JourneyContext'
 
 function BrandIcon() {
   return (
@@ -33,6 +35,7 @@ function getHashRoute(hash: string) {
 export default function App() {
   const [route, setRoute] = useState(() => getHashRoute(window.location.hash))
   const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const { state: journeyState } = useJourneyContext()
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -77,13 +80,21 @@ export default function App() {
               <AuthButton onLoginClick={() => setLoginModalOpen(true)} />
             </div>
           </div>
-          <p className="mt-2 text-sm text-eco-muted">Calculate your flight emissions</p>
+          <p className="mt-2 text-sm text-eco-muted">
+            {journeyState.journeyOptions ? 'Choose the lowest-carbon route for your trip' : 'Calculate your journey emissions and compare modes'}
+          </p>
         </header>
 
         <hr className="border-eco-border" />
 
         <CitySelector />
         <TravelClassSelector />
+
+        <div className="rounded-2xl border border-eco-border bg-eco-panel p-4">
+          <JourneyOptions
+            options={journeyState.journeyOptions ?? []}
+          />
+        </div>
 
         <EmissionsCard />
         <ComparisonBar />

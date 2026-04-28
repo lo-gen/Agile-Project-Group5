@@ -60,20 +60,40 @@ export function calculateFlightEmissions(
  * @param _destination - Arrival city
  */
 export function calculateCarEmissions(
-  _origin: City,
-  _destination: City,
+  origin: City,
+  destination: City,
 ): EmissionsResult {
-  throw new Error('calculateCarEmissions is not yet implemented')
+  const distanceKm = haversineDistanceKm(origin, destination)
+  const co2Kg = distanceKm * CAR_EMISSION_PER_KM
+
+  return {
+    distanceKm,
+    co2Kg,
+    co2KgPerKm: CAR_EMISSION_PER_KM,
+    equivalentKmByCar: distanceKm,
+    equivalentKmByTrain: co2Kg / TRAIN_EMISSION_PER_KM,
+    treesNeededToOffset: Math.ceil(co2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+  }
 }
 
 /**
- * Placeholder for future train emissions calculation.
- * @param _origin - Departure city
- * @param _destination - Arrival city
+ * Calculates CO2 emissions for a train journey between two cities.
+ * @param origin - Departure city
+ * @param destination - Arrival city
  */
 export function calculateTrainEmissions(
-  _origin: City,
-  _destination: City,
+  origin: City,
+  destination: City,
 ): EmissionsResult {
-  throw new Error('calculateTrainEmissions is not yet implemented')
+  const distanceKm = haversineDistanceKm(origin, destination)
+  const co2Kg = distanceKm * TRAIN_EMISSION_PER_KM
+
+  return {
+    distanceKm,
+    co2Kg,
+    co2KgPerKm: TRAIN_EMISSION_PER_KM,
+    equivalentKmByCar: co2Kg / CAR_EMISSION_PER_KM,
+    equivalentKmByTrain: distanceKm,
+    treesNeededToOffset: Math.ceil(co2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+  }
 }

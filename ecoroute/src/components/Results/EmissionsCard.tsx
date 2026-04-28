@@ -1,4 +1,7 @@
 import { useFlightContext } from '../../context/FlightContext'
+import { useJourneyContext } from '../../context/JourneyContext'
+import { CAR_EMISSION_PER_KM } from '../../utils/constants'
+import type { JourneyLeg } from '../../types'
 
 function fmt(n: number, decimals = 0): string {
   return n.toLocaleString('en-GB', { maximumFractionDigits: decimals })
@@ -22,10 +25,9 @@ function formatHoursAndMinutes(totalHours: number): string {
 function estimateAirborneHours(distanceKm: number): number {
   if (distanceKm <= 0) return 0
 
-  // Smoothly increase effective speed with distance
-  const minSpeed = 500   // short flights
-  const maxSpeed = 830   // long haul cruise
-  const scale = 1200     // how quickly it ramps up
+  const minSpeed = 500
+  const maxSpeed = 830
+  const scale = 1200
 
   const effectiveSpeedKmh =
     maxSpeed - (maxSpeed - minSpeed) * Math.exp(-distanceKm / scale)
@@ -33,14 +35,43 @@ function estimateAirborneHours(distanceKm: number): number {
   return distanceKm / effectiveSpeedKmh
 }
 
+function estimateJourneyHours(legs: JourneyLeg[]): number {
+  return legs.reduce((total, leg) => {
+    if (leg.transportMode === 'flight') {
+      return total + estimateAirborneHours(leg.distanceKm)
+    }
+    if (leg.transportMode === 'car') {
+      return total + leg.distanceKm / 100
+    }
+    if (leg.transportMode === 'train') {
+      return total + leg.distanceKm / 120
+    }
+    return total
+  }, 0)
+}
 
 export default function EmissionsCard() {
-  const { state } = useFlightContext()
+  const { state: flightState } = useFlightContext()
+  const { state: journeyState } = useJourneyContext()
 
-  if (!state.result) return null
+  const journey = journeyState.selectedJourney
 
-  const { co2Kg, distanceKm, equivalentKmByCar, treesNeededToOffset } = state.result
-  const estimatedFlightDuration = formatHoursAndMinutes(estimateAirborneHours(distanceKm))
+  if (!journey && !flightState.result) return null
+
+  const co2Kg = journey ? journey.totalCo2Kg : flightState.result!.co2Kg
+  const distanceKm = journey ? journey.totalDistanceKm : flightState.result!.distanceKm
+  const equivalentKmByCar = journey
+    ? co2Kg / CAR_EMISSION_PER_KM
+    : flightState.result!.equivalentKmByCar
+  const treesNeededToOffset = journey
+    ? journey.treesNeededToOffset
+    : flightState.result!.treesNeededToOffset
+
+  const estimatedJourneyDuration = journey
+    ? formatHoursAndMinutes(estimateJourneyHours(journey.legs))
+    : formatHoursAndMinutes(estimateAirborneHours(distanceKm))
+
+  const journeyDescription = journey ? 'route distance' : 'flight distance (incl. routing)'
 
   return (
     <div className="bg-eco-panel border border-eco-border rounded-lg p-4 flex flex-col gap-3">
@@ -57,11 +88,12 @@ export default function EmissionsCard() {
       <div className="border-t border-eco-border pt-3 flex flex-col gap-1 text-sm text-eco-muted">
         <p>
           <span className="text-eco-text font-medium">{fmt(distanceKm)} km</span>{' '}
-          flight distance (incl. routing)
+          {journeyDescription}
         </p>
         <p>
           ≈ {' '}
-          <span className="text-eco-text font-medium">{estimatedFlightDuration}</span>{' '}
+          <span className="text-eco-text font-medium">{estimatedJourneyDuration}</span>{' '}
+          total journey time
         </p>
         <p>
           ≈ driving{' '}

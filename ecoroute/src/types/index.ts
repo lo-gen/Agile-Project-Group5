@@ -13,11 +13,53 @@ export interface EmissionsResult {
   distanceKm: number;
   co2Kg: number;
   co2KgPerKm: number;
-  cabinClass: CabinClass;
+  cabinClass?: CabinClass;
   equivalentKmByCar: number;
   equivalentKmByTrain: number;
   treesNeededToOffset: number;
 }
+
+export type TransportModeType = 'flight' | 'car' | 'train'
+
+export interface JourneyLeg {
+  transportMode: TransportModeType;
+  startCity: City;
+  endCity: City;
+  distanceKm: number;
+  co2Kg: number;
+  cabinClass?: CabinClass;
+}
+
+export interface Journey {
+  id: string;
+  legs: JourneyLeg[];
+  totalDistanceKm: number;
+  totalCo2Kg: number;
+  treesNeededToOffset: number;
+}
+
+export interface JourneyOption {
+  name: string;
+  description: string;
+  journey: Journey;
+  rank: number;
+}
+
+export interface JourneyState {
+  journeyOptions: JourneyOption[] | null;
+  selectedJourney: Journey | null;
+}
+
+export interface JourneyContextValue {
+  state: JourneyState
+  selectJourney: (journey: Journey | null) => void
+  reset: () => void
+}
+
+export type JourneyAction =
+  | { type: 'SET_JOURNEY_OPTIONS'; payload: JourneyOption[] | null }
+  | { type: 'SELECT_JOURNEY'; payload: Journey | null }
+  | { type: 'RESET' }
 
 export interface FlightState {
   origin: City | null;
