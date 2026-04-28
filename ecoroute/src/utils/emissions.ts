@@ -30,6 +30,7 @@ export function calculateFlightEmissions(
   origin: City,
   destination: City,
   cabinClass: CabinClass,
+  groupSize = 1,
 ): EmissionsResult {
   const rawDistance = haversineDistanceKm(origin, destination)
   const distanceKm  = rawDistance + DETOUR_FACTOR_KM
@@ -40,18 +41,27 @@ export function calculateFlightEmissions(
       : EMISSION_FACTOR_LONG_HAUL
 
   const cabinMultiplier = CABIN_CLASS_MULTIPLIERS[cabinClass]
-  const co2Kg = distanceKm * emissionFactor * cabinMultiplier * RFI_MULTIPLIER
-  const co2KgPerKm = co2Kg / distanceKm
+  const safeGroupSize = Math.max(1, Math.floor(groupSize))
 
-  return {
-    distanceKm,
-    co2Kg,
-    co2KgPerKm,
-    cabinClass,
-    equivalentKmByCar:   co2Kg / CAR_EMISSION_PER_KM,
-    equivalentKmByTrain: co2Kg / TRAIN_EMISSION_PER_KM,
-    treesNeededToOffset: Math.ceil(co2Kg / TREE_ABSORPTION_KG_PER_YEAR),
-  }
+  const perPersonCo2Kg = distanceKm * emissionFactor * cabinMultiplier * RFI_MULTIPLIER
+  const totalCo2Kg = perPersonCo2Kg * safeGroupSize
+  const co2KgPerKm = perPersonCo2Kg / distanceKm
+
+
+
+ return {
+  distanceKm,
+  co2Kg: totalCo2Kg, // keep existing UI working
+  co2KgPerKm,
+  cabinClass,
+  groupSize: safeGroupSize,
+  perPersonCo2Kg,
+  totalCo2Kg,
+  equivalentKmByCar: totalCo2Kg / CAR_EMISSION_PER_KM,
+  equivalentKmByTrain: totalCo2Kg / TRAIN_EMISSION_PER_KM,
+  treesNeededToOffset: Math.ceil(totalCo2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+}
+
 }
 
 /**

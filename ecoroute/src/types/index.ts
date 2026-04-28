@@ -9,11 +9,16 @@ export interface City {
 
 export type CabinClass = 'economy' | 'business' | 'first';
 
+
+
 export interface EmissionsResult {
   distanceKm: number;
   co2Kg: number;
   co2KgPerKm: number;
-  cabinClass: CabinClass;
+  cabinClass: CabinClass
+  groupSize: number;
+  perPersonCo2Kg: number;
+  totalCo2Kg: number;
   equivalentKmByCar: number;
   equivalentKmByTrain: number;
   treesNeededToOffset: number;
@@ -23,6 +28,7 @@ export interface FlightState {
   origin: City | null;
   destination: City | null;
   cabinClass: CabinClass;
+  groupSize : number;
   result: EmissionsResult | null;
   flightHistory: SavedFlight[] | null;
   isLoadingHistory: boolean;
@@ -37,7 +43,9 @@ export type FlightAction =
   | { type: 'SET_LOADING_HISTORY'; payload: boolean }
   | { type: 'ADD_TO_HISTORY'; payload: SavedFlight }
   | { type: 'REMOVE_FROM_HISTORY'; payload: string }
-  | { type: 'CLEAR_HISTORY' };
+  | { type: 'CLEAR_HISTORY' }
+  | { type: 'SET_GROUP_SIZE'; payload: number };
+
 
 export interface TransportMode {
   id: string;

@@ -39,7 +39,14 @@ export default function EmissionsCard() {
 
   if (!state.result) return null
 
-  const { co2Kg, distanceKm, equivalentKmByCar, treesNeededToOffset } = state.result
+  const {
+    totalCo2Kg,
+    perPersonCo2Kg,
+    groupSize,
+    distanceKm,
+    equivalentKmByCar,
+    treesNeededToOffset,
+  } = state.result
   const estimatedFlightDuration = formatHoursAndMinutes(estimateAirborneHours(distanceKm))
 
   return (
@@ -49,12 +56,19 @@ export default function EmissionsCard() {
           CO₂ emissions
         </p>
         <p className="font-mono text-4xl font-medium text-eco-text">
-          {fmt(co2Kg)}{' '}
+          {fmt(totalCo2Kg)}{' '}
           <span className="text-lg text-eco-muted">kg</span>
+        </p>
+        <p className="text-sm text-eco-muted mt-1">
+          {groupSize} traveler{groupSize !== 1 ? 's' : ''} total
         </p>
       </div>
 
       <div className="border-t border-eco-border pt-3 flex flex-col gap-1 text-sm text-eco-muted">
+        <p>
+          Per person:{' '}
+          <span className="text-eco-text font-medium">{fmt(perPersonCo2Kg)} kg</span>
+        </p>
         <p>
           <span className="text-eco-text font-medium">{fmt(distanceKm)} km</span>{' '}
           flight distance (incl. routing)
