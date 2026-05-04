@@ -1,4 +1,4 @@
-export interface FlightRrequest {
+export interface FlightRequest {
     origin: string;
     destination: string;
     operationCarrietCode: string;
@@ -24,7 +24,7 @@ export type ContrailsBucket =
     | 'CONTRAILS_IMPACT_HIGH';
 
 export interface FlightEmissionResult {
-    flight: FlightRrequest;
+    flight: FlightRequest;
     emissionGramsPerPax: EmissionsPerPax;
     source: string;
     contrailsImpactBucket: ContrailsBucket;
