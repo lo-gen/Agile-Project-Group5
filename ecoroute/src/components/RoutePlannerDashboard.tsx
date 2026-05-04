@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { cities } from '../data/cities'
+import { useFlightContext } from '../context/FlightContext'
 import type { CabinClass } from '../types'
+import { filterCities, getCityCountries } from '../utils/cityFilters'
 import {
   createDefaultRoutePlanner,
   type RouteOption,
@@ -72,18 +74,50 @@ function recalculateOption(option: RouteOption, directFlightCo2Kg: number) {
   }
 }
 
+function scaleOption(option: RouteOption, travelerCount: number, directFlightCo2Kg: number) {
+  const safeTravelerCount = Math.max(1, Math.floor(travelerCount))
+  const scaledSegments = option.segments.map((segment) => ({
+    ...segment,
+    co2Kg: Math.round(segment.co2Kg * safeTravelerCount * 10) / 10,
+  }))
+
+  return recalculateOption(
+    {
+      ...option,
+      segments: scaledSegments,
+      totalCo2Kg: option.totalCo2Kg * safeTravelerCount,
+    },
+    directFlightCo2Kg * safeTravelerCount,
+  )
+}
+
 export default function RoutePlannerDashboard() {
   const planner = useMemo(() => createDefaultRoutePlanner(), [])
-  const [originId, setOriginId] = useState(londonToHelsinkiExampleRequest.origin?.id ?? 'lhr')
-  const [destinationId, setDestinationId] = useState(londonToHelsinkiExampleRequest.destination?.id ?? 'hel')
+  const { state: flightState, setGroupSize } = useFlightContext()
+  const [originId, setOriginId] = useState('')
+  const [destinationId, setDestinationId] = useState('')
   const [cabinClass, setCabinClass] = useState<CabinClass>(londonToHelsinkiExampleRequest.cabinClass)
   const [strategy, setStrategy] = useState<RouteStrategy>(londonToHelsinkiExampleRequest.strategy)
+  const [originCountry, setOriginCountry] = useState('')
+  const [destinationCountry, setDestinationCountry] = useState('')
   const [options, setOptions] = useState<RouteOption[]>([])
   const [selectedOptionId, setSelectedOptionId] = useState('')
   const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
+  const countries = useMemo(() => getCityCountries(cities), [])
+
+  const originCities = useMemo(
+    () => filterCities(cities, { query: '', country: originCountry, excludeId: destinationId }),
+    [destinationId, originCountry],
+  )
+
+  const destinationCities = useMemo(
+    () => filterCities(cities, { query: '', country: destinationCountry, excludeId: originId }),
+    [destinationCountry, destinationId, originId],
+  )
 
   const planJourney = useCallback(async () => {
+    const travelerCount = flightState.groupSize
     const origin = getCityById(originId)
     const destination = getCityById(destinationId)
 
@@ -94,7 +128,9 @@ export default function RoutePlannerDashboard() {
       strategy,
     })
 
-    let nextOptions = result.options
+    let nextOptions = result.options.map((option) =>
+      scaleOption(option, travelerCount, result.directFlightCo2Kg),
+    )
 
     if (origin && destination) {
       const driveIndex = nextOptions.findIndex((option) => option.strategy === 'drive')
@@ -117,11 +153,12 @@ export default function RoutePlannerDashboard() {
                 : segment,
             )
 
-            return recalculateOption(
+            return scaleOption(
               {
                 ...driveOption,
                 segments: updatedSegments,
               },
+              travelerCount,
               result.directFlightCo2Kg,
             )
           })
@@ -150,7 +187,7 @@ export default function RoutePlannerDashboard() {
       ...selected,
       segments: cloneSegments(selected.segments),
     })
-  }, [cabinClass, destinationId, originId, planner, strategy])
+  }, [cabinClass, destinationId, flightState.groupSize, originId, planner, strategy])
 
   useEffect(() => {
     void planJourney()
@@ -204,11 +241,24 @@ export default function RoutePlannerDashboard() {
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Starting location</span>
               <select
+                value={originCountry}
+                onChange={(event) => setOriginCountry(event.target.value)}
+                className="rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
+              >
+                <option value="">All countries</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={originId}
                 onChange={(event) => setOriginId(event.target.value)}
                 className="rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
               >
-                {cities.map((city) => (
+                <option value="">Select city…</option>
+                {originCities.map((city) => (
                   <option key={city.id} value={city.id}>
                     {city.name}, {city.country}
                   </option>
@@ -219,18 +269,33 @@ export default function RoutePlannerDashboard() {
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Destination</span>
               <select
+                value={destinationCountry}
+                onChange={(event) => setDestinationCountry(event.target.value)}
+                className="rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
+              >
+                <option value="">All countries</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={destinationId}
                 onChange={(event) => setDestinationId(event.target.value)}
                 className="rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
               >
-                {cities.map((city) => (
+                <option value="">Select city…</option>
+                {destinationCities.map((city) => (
                   <option key={city.id} value={city.id}>
                     {city.name}, {city.country}
                   </option>
                 ))}
               </select>
             </label>
+          </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Cabin / travel class</span>
               <select
@@ -262,6 +327,26 @@ export default function RoutePlannerDashboard() {
             </label>
           </div>
 
+          <div className="grid gap-3 rounded-lg border border-eco-border bg-eco-panel p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Travelers</p>
+                <h3 className="text-sm font-semibold text-eco-text">Number of travelers</h3>
+              </div>
+              <span className="rounded-full border border-eco-border px-3 py-1 text-xs text-eco-muted">
+                Scales emissions totals
+              </span>
+            </div>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={flightState.groupSize}
+              onChange={(event) => setGroupSize(Number(event.target.value))}
+              className="w-full rounded-md border border-eco-border bg-eco-bg px-3 py-2 text-sm text-eco-text focus:outline-none focus:ring-1 focus:ring-eco-green"
+            />
+          </div>
+
           <button
             type="button"
             onClick={() => void planJourney()}
@@ -289,14 +374,6 @@ export default function RoutePlannerDashboard() {
           {activeRoute ? (
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
-                <p className="text-xs uppercase tracking-wider text-eco-muted">Distance</p>
-                <p className="mt-1 text-xl font-semibold text-eco-text">{formatDistance(activeRoute.totalDistanceKm)}</p>
-              </div>
-              <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
-                <p className="text-xs uppercase tracking-wider text-eco-muted">Time</p>
-                <p className="mt-1 text-xl font-semibold text-eco-text">{formatTime(activeRoute.totalTravelTimeMinutes)}</p>
-              </div>
-              <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
                 <p className="text-xs uppercase tracking-wider text-eco-muted">CO₂</p>
                 <p className="mt-1 text-xl font-semibold text-eco-text">{activeRoute.totalCo2Kg.toFixed(0)} kg</p>
               </div>
@@ -305,6 +382,14 @@ export default function RoutePlannerDashboard() {
                 <p className={`mt-1 text-xl font-semibold ${activeRoute.savingsVsDirectFlightKg >= 0 ? 'text-eco-green' : 'text-orange-300'}`}>
                   {formatMoney(activeRoute.savingsVsDirectFlightKg)}
                 </p>
+              </div>
+              <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
+                <p className="text-xs uppercase tracking-wider text-eco-muted">Distance</p>
+                <p className="mt-1 text-xl font-semibold text-eco-text">{formatDistance(activeRoute.totalDistanceKm)}</p>
+              </div>
+              <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
+                <p className="text-xs uppercase tracking-wider text-eco-muted">Time</p>
+                <p className="mt-1 text-xl font-semibold text-eco-text">{formatTime(activeRoute.totalTravelTimeMinutes)}</p>
               </div>
             </div>
           ) : (
