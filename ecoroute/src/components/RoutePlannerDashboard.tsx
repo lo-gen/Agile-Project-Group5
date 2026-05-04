@@ -36,7 +36,7 @@ function formatTime(minutes: number) {
   return `${hours}h ${remainingMinutes}m`
 }
 
-function formatMoney(value: number) {
+function formatDeltaKg(value: number) {
   const prefix = value >= 0 ? '+' : '−'
   return `${prefix}${Math.abs(value).toLocaleString('en-GB', { maximumFractionDigits: 0 })} kg`
 }
