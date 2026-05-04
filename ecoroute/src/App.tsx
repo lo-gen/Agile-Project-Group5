@@ -1,25 +1,9 @@
 import { useEffect, useState } from 'react'
-import CitySelector from './components/Controls/CitySelector'
-import TravelClassSelector from './components/Controls/TravelClassSelector'
-import EmissionsCard from './components/Results/EmissionsCard'
-import ComparisonBar from './components/Results/ComparisonBar'
-import FlightMap from './components/Map/FlightMap'
+import RoutePlannerDashboard from './pages/RoutePlannerDashboard'
 import AffiliateProgramPage from './pages/AffiliateProgramPage'
 import AboutPage from './pages/AboutPage'
 import AuthButton from './components/Auth/AuthButton'
 import LoginModal from './components/Auth/LoginModal'
-import FlightHistorySidebar from './components/History/FlightHistorySidebar'
-
-function BrandIcon() {
-  return (
-    <span
-      aria-hidden="true"
-      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-eco-green text-xs font-bold text-eco-bg"
-    >
-      ER
-    </span>
-  )
-}
 
 function getHashRoute(hash: string) {
   if (!hash || hash === '#/' || hash === '#') {
@@ -32,7 +16,7 @@ function getHashRoute(hash: string) {
 
 export default function App() {
   const [route, setRoute] = useState(() => getHashRoute(window.location.hash))
-  const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -43,59 +27,50 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
-  if (route === '/affiliate') {
-    return <AffiliateProgramPage />
-  }
-
-  if (route === '/about') {
-    return <AboutPage />
-  }
+  const page = route === '/affiliate' ? (
+    <AffiliateProgramPage />
+  ) : route === '/about' ? (
+    <AboutPage />
+  ) : (
+    <RoutePlannerDashboard />
+  )
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-eco-bg font-sans">
-      <aside className="flex h-full w-[35%] flex-col gap-4 overflow-y-auto border-r border-eco-border bg-eco-panel p-5">
-        <header>
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="flex items-center gap-2 text-2xl font-semibold text-eco-text">
-              <BrandIcon />
-              EcoRoute
-            </h1>
+    <div className="min-h-screen bg-eco-bg text-eco-text">
+      <header className="sticky top-0 z-50 border-b border-eco-border bg-eco-panel/95 backdrop-blur">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <a href="#/" className="text-sm font-semibold uppercase tracking-[0.25em] text-eco-green">
+            EcoRoute
+          </a>
 
-            <div className="flex items-center gap-2">
-              <a
-                href="#/about"
-                className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
-              >
-                About page
-              </a>
-              <a
-                href="#/affiliate"
-                className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
-              >
-                Join affiliate
-              </a>
-              <AuthButton onLoginClick={() => setLoginModalOpen(true)} />
-            </div>
-          </div>
-          <p className="mt-2 text-sm text-eco-muted">Calculate your flight emissions</p>
-        </header>
+          <nav className="flex flex-wrap items-center gap-2">
+            <a
+              href="#/"
+              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium transition hover:border-eco-green hover:text-eco-green"
+            >
+              Home
+            </a>
+            <a
+              href="#/about"
+              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium transition hover:border-eco-green hover:text-eco-green"
+            >
+              About Us
+            </a>
+            <a
+              href="#/affiliate"
+              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium transition hover:border-eco-green hover:text-eco-green"
+            >
+              Affiliate Marketing
+            </a>
+          </nav>
 
-        <hr className="border-eco-border" />
+          <AuthButton onLoginClick={() => setIsLoginOpen(true)} />
+        </div>
+      </header>
 
-        <CitySelector />
-        <TravelClassSelector />
+      <main>{page}</main>
 
-        <EmissionsCard />
-        <ComparisonBar />
-
-        <FlightHistorySidebar />
-      </aside>
-
-      <main className="h-full w-[65%]">
-        <FlightMap />
-      </main>
-
-      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
   )
 }

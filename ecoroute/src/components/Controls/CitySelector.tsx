@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react'
 import { cities } from '../../data/cities'
 import { useFlightContext } from '../../context/FlightContext'
 import type { City } from '../../types'
+import { filterCities, getCityCountries } from '../../utils/cityFilters'
 
 function CityDropdown({
   label,
@@ -13,13 +15,32 @@ function CityDropdown({
   exclude: City | null
   onChange: (city: City | null) => void
 }) {
-  const available = cities.filter((c) => c.id !== exclude?.id)
+  const [country, setCountry] = useState('')
+
+  const countries = useMemo(() => getCityCountries(cities), [])
+  const available = useMemo(
+    () => filterCities(cities, { query: '', country, excludeId: exclude?.id }),
+    [country, exclude?.id],
+  )
 
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-medium text-eco-muted uppercase tracking-wider">
         {label}
       </label>
+      <select
+        className="w-full rounded-md border border-eco-border bg-eco-bg px-3 py-2 text-sm text-eco-text focus:outline-none focus:ring-1 focus:ring-eco-green"
+        value={country}
+        onChange={(event) => setCountry(event.target.value)}
+        aria-label={`${label} country filter`}
+      >
+        <option value="">All countries</option>
+        {countries.map((item) => (
+          <option key={item} value={item}>
+            {item}
+          </option>
+        ))}
+      </select>
       <select
         className="w-full bg-eco-bg border border-eco-border text-eco-text rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
         value={value?.id ?? ''}
