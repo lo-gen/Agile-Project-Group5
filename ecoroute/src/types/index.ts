@@ -32,19 +32,24 @@ export interface FlightState {
   result: EmissionsResult | null;
   flightHistory: SavedFlight[] | null;
   isLoadingHistory: boolean;
+  isLoadingEmissions: boolean;
+  emissionError: string | null;
 }
 
 export type FlightAction =
   | { type: 'SET_ORIGIN'; payload: City | null }
   | { type: 'SET_DESTINATION'; payload: City | null }
   | { type: 'SET_CABIN_CLASS'; payload: CabinClass }
+  | { type: 'SET_GROUP_SIZE'; payload: number }
+  | { type: 'SET_EMISSIONS_LOADING'; payload: boolean }
+  | { type: 'SET_EMISSIONS_ERROR'; payload: string | null }
+  | { type: 'SET_EMISSIONS_RESULT'; payload: EmissionsResult | null }
   | { type: 'RESET' }
   | { type: 'SET_FLIGHT_HISTORY'; payload: SavedFlight[] }
   | { type: 'SET_LOADING_HISTORY'; payload: boolean }
   | { type: 'ADD_TO_HISTORY'; payload: SavedFlight }
   | { type: 'REMOVE_FROM_HISTORY'; payload: string }
-  | { type: 'CLEAR_HISTORY' }
-  | { type: 'SET_GROUP_SIZE'; payload: number };
+  | { type: 'CLEAR_HISTORY' };
 
 
 export interface TransportMode {

@@ -1,6 +1,7 @@
-import { createContext, useContext, useReducer, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react'
 import type { FlightState, FlightAction, City, CabinClass, SavedFlight } from '../types'
-import { calculateFlightEmissions } from '../utils/emissions'
+import { getTypicalEmissions } from '../utils/timApi'
+import { buildFlightEmissionsResultFromApi, getApiEmissionsGrams } from '../utils/emissions'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 
@@ -11,36 +12,58 @@ const initialState: FlightState = {
   result:           null,
   flightHistory:    null,
   isLoadingHistory: false,
-  groupSize: 1
+  isLoadingEmissions: false,
+  emissionError: null,
+  groupSize: 1,
 }
 
-function deriveResult(state: FlightState): FlightState['result'] {
-  if (state.origin && state.destination) {
-    return calculateFlightEmissions(state.origin, state.destination, state.cabinClass, state.groupSize)
+function updateResultForGroupSize(
+  result: FlightState['result'],
+  groupSize: number,
+): FlightState['result'] {
+  if (!result) return null
+
+  const safeGroupSize = Math.max(1, Math.floor(groupSize))
+  const totalCo2Kg = result.perPersonCo2Kg * safeGroupSize
+
+  return {
+    ...result,
+    groupSize: safeGroupSize,
+    totalCo2Kg,
+    co2Kg: totalCo2Kg,
+    equivalentKmByCar: totalCo2Kg / 0.21,
+    equivalentKmByTrain: totalCo2Kg / 0.041,
+    treesNeededToOffset: Math.ceil(totalCo2Kg / 21),
   }
-  return null
 }
 
 function flightReducer(state: FlightState, action: FlightAction): FlightState {
   switch (action.type) {
     case 'SET_ORIGIN': {
-      const next = { ...state, origin: action.payload }
-      return { ...next, result: deriveResult(next) }
+      const next = { ...state, origin: action.payload, result: null, emissionError: null }
+      return { ...next, isLoadingEmissions: false }
     }
     case 'SET_DESTINATION': {
-      const next = { ...state, destination: action.payload }
-      return { ...next, result: deriveResult(next) }
+      const next = { ...state, destination: action.payload, result: null, emissionError: null }
+      return { ...next, isLoadingEmissions: false }
     }
     case 'SET_CABIN_CLASS': {
-      const next = { ...state, cabinClass: action.payload }
-      return { ...next, result: deriveResult(next) }
+      const next = { ...state, cabinClass: action.payload, result: null, emissionError: null }
+      return { ...next, isLoadingEmissions: false }
     }
 
-    case 'SET_GROUP_SIZE' : {
+    case 'SET_GROUP_SIZE': {
       const safeGroupSize = Math.max(1, Math.floor(action.payload))
-      const next = {...state, groupSize: safeGroupSize}
-      return{...next,result: deriveResult(next)}
+      const next = { ...state, groupSize: safeGroupSize }
+      return { ...next, result: updateResultForGroupSize(state.result, safeGroupSize) }
     }
+
+    case 'SET_EMISSIONS_LOADING':
+      return { ...state, isLoadingEmissions: action.payload }
+    case 'SET_EMISSIONS_ERROR':
+      return { ...state, emissionError: action.payload }
+    case 'SET_EMISSIONS_RESULT':
+      return { ...state, result: action.payload }
 
     case 'RESET':
       return initialState
@@ -117,6 +140,75 @@ export function FlightProvider({ children }: { children: ReactNode }) {
       console.error('Failed to save flight to history:', err)
     }
   }
+
+  useEffect(() => {
+    let active = true
+
+    if (!state.origin || !state.destination) {
+      dispatch({ type: 'SET_EMISSIONS_RESULT', payload: null })
+      dispatch({ type: 'SET_EMISSIONS_LOADING', payload: false })
+      dispatch({ type: 'SET_EMISSIONS_ERROR', payload: null })
+      return
+    }
+
+    const origin = state.origin
+    const destination = state.destination
+    const originIata = origin.iata
+    const destinationIata = destination.iata
+    const requestCabinClass = state.cabinClass
+    const requestGroupSize = state.groupSize
+
+    const fetchEmissions = async () => {
+      dispatch({ type: 'SET_EMISSIONS_LOADING', payload: true })
+      dispatch({ type: 'SET_EMISSIONS_ERROR', payload: null })
+      dispatch({ type: 'SET_EMISSIONS_RESULT', payload: null })
+
+      try {
+        const response = await getTypicalEmissions(originIata, destinationIata)
+        const market = response.typicalFlightEmissions.find(
+          (item) =>
+            item.market.origin === originIata &&
+            item.market.destination === destinationIata,
+        )
+
+        const emissionsPerPax = market?.emissionsGramsPerPax
+        const gramsPerPax = emissionsPerPax
+          ? getApiEmissionsGrams(emissionsPerPax, requestCabinClass)
+          : undefined
+
+        if (gramsPerPax == null || gramsPerPax === 0) {
+          throw new Error('TIM API returned no emissions data for the selected route and cabin class.')
+        }
+
+        if (!active) return
+
+        const result = buildFlightEmissionsResultFromApi(
+          origin,
+          destination,
+          requestCabinClass,
+          requestGroupSize,
+          gramsPerPax,
+        )
+
+        if (!active) return
+        dispatch({ type: 'SET_EMISSIONS_RESULT', payload: result })
+      } catch (error) {
+        if (!active) return
+        const message = error instanceof Error ? error.message : String(error)
+        dispatch({ type: 'SET_EMISSIONS_ERROR', payload: message })
+      } finally {
+        if (active) {
+          dispatch({ type: 'SET_EMISSIONS_LOADING', payload: false })
+        }
+      }
+    }
+
+    void fetchEmissions()
+
+    return () => {
+      active = false
+    }
+  }, [state.origin, state.destination, state.cabinClass])
 
   return (
     <FlightContext.Provider value={{
