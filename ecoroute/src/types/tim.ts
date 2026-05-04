@@ -1,8 +1,8 @@
 export interface FlightRequest {
     origin: string;
     destination: string;
-    operationCarrietCode: string;
-    flightNumber: Number;
+    operationCarrierCode: string;
+    flightNumber: number;
     departureDate: {
         year: number;
         month: number;
@@ -11,10 +11,10 @@ export interface FlightRequest {
 }
 
 export interface EmissionsPerPax {
-    first?: number;
-    buisseness?: number;
-    permiumEconomy?: number;
     economy?: number;
+    premiumEconomy?: number;
+    business?: number;
+    first?: number;
 }
 
 export type ContrailsBucket =
