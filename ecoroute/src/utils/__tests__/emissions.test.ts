@@ -67,4 +67,31 @@ describe('calculateFlightEmissions', () => {
     const result = calculateFlightEmissions(stockholm, london, 'business')
     expect(result.cabinClass).toBe('business')
   })
+
+  it('uses group size 1 as baseline', () => {
+    const result = calculateFlightEmissions(stockholm, london, 'economy', 1)
+    expect(result.groupSize).toBe(1)
+    expect(result.totalCo2Kg).toBeCloseTo(result.perPersonCo2Kg, 6)
+  })
+
+  it('scales total emissions for group sizes above 1', () => {
+    const solo = calculateFlightEmissions(stockholm, london, 'economy', 1)
+    const group = calculateFlightEmissions(stockholm, london, 'economy', 4)
+    expect(group.groupSize).toBe(4)
+    expect(group.totalCo2Kg).toBeCloseTo(solo.totalCo2Kg * 4, 6)
+    expect(group.perPersonCo2Kg).toBeCloseTo(solo.perPersonCo2Kg, 6)
+  })
+
+  it('falls back to group size 1 for invalid values', () => {
+    const zero = calculateFlightEmissions(stockholm, london, 'economy', 0)
+    const negative = calculateFlightEmissions(stockholm, london, 'economy', -3)
+    const decimal = calculateFlightEmissions(stockholm, london, 'economy', 2.8)
+    const baseline = calculateFlightEmissions(stockholm, london, 'economy', 1)
+
+    expect(zero.groupSize).toBe(1)
+    expect(negative.groupSize).toBe(1)
+    expect(zero.totalCo2Kg).toBeCloseTo(baseline.totalCo2Kg, 6)
+    expect(negative.totalCo2Kg).toBeCloseTo(baseline.totalCo2Kg, 6)
+    expect(decimal.groupSize).toBe(2)
+  })
 })

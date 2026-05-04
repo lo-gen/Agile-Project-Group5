@@ -45,11 +45,10 @@ export default function FlightMap() {
       style={{ height: '100%', width: '100%' }}
       zoomControl={true}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
+    <TileLayer
+  attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+/>
       {cities.map((city) => {
         const isSelected = city.id === origin?.id || city.id === destination?.id
         return (
