@@ -303,7 +303,7 @@ export default function RoutePlannerDashboard() {
               <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
                 <p className="text-xs uppercase tracking-wider text-eco-muted">Savings vs direct flight</p>
                 <p className={`mt-1 text-xl font-semibold ${activeRoute.savingsVsDirectFlightKg >= 0 ? 'text-eco-green' : 'text-orange-300'}`}>
-                  {formatMoney(activeRoute.savingsVsDirectFlightKg)}
+                  {formatDeltaKg(activeRoute.savingsVsDirectFlightKg)}
                 </p>
               </div>
             </div>
@@ -348,7 +348,7 @@ export default function RoutePlannerDashboard() {
                     <span>{option.totalCo2Kg.toFixed(0)} kg CO₂</span>
                   </div>
                   <div className="mt-2 text-xs text-eco-muted">
-                    {formatMoney(option.savingsVsDirectFlightKg)} vs direct flight
+                    {formatDeltaKg(option.savingsVsDirectFlightKg)} vs direct flight
                   </div>
                 </button>
               )
