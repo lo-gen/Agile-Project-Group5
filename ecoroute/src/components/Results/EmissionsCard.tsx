@@ -37,6 +37,23 @@ function estimateAirborneHours(distanceKm: number): number {
 export default function EmissionsCard() {
   const { state } = useFlightContext()
 
+  if (!state.origin || !state.destination) return null
+  if (state.isLoadingEmissions) {
+    return (
+      <div className="bg-eco-panel border border-eco-border rounded-lg p-4 text-sm text-eco-muted">
+        Fetching emissions from TIM API…
+      </div>
+    )
+  }
+
+  if (state.emissionError) {
+    return (
+      <div className="bg-eco-panel border border-eco-border rounded-lg p-4 text-sm text-red-400">
+        Failed to load emissions: {state.emissionError}
+      </div>
+    )
+  }
+
   if (!state.result) return null
 
   const {

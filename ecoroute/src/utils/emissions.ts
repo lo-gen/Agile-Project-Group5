@@ -1,4 +1,5 @@
 import type { City, CabinClass, EmissionsResult } from '../types'
+import type { EmissionsPerPax } from '../types/tim'
 import { haversineDistanceKm } from './distance'
 import {
   DETOUR_FACTOR_KM,
@@ -62,6 +63,49 @@ export function calculateFlightEmissions(
   treesNeededToOffset: Math.ceil(totalCo2Kg / TREE_ABSORPTION_KG_PER_YEAR),
 }
 
+}
+
+export function getApiEmissionsGrams(
+  emissions: EmissionsPerPax,
+  cabinClass: CabinClass,
+): number {
+  switch (cabinClass) {
+    case 'business':
+      return emissions.business ?? emissions.economy ?? 0
+    case 'first':
+      return emissions.first ?? emissions.business ?? emissions.economy ?? 0
+    default:
+      return emissions.economy ?? 0
+  }
+}
+
+export function buildFlightEmissionsResultFromApi(
+  origin: City,
+  destination: City,
+  cabinClass: CabinClass,
+  groupSize = 1,
+  gramsPerPax: number,
+): EmissionsResult {
+  const rawDistance = haversineDistanceKm(origin, destination)
+  const distanceKm = rawDistance + DETOUR_FACTOR_KM
+  const safeGroupSize = Math.max(1, Math.floor(groupSize))
+
+  const perPersonCo2Kg = gramsPerPax / 1000
+  const totalCo2Kg = perPersonCo2Kg * safeGroupSize
+  const co2KgPerKm = distanceKm > 0 ? perPersonCo2Kg / distanceKm : 0
+
+  return {
+    distanceKm,
+    co2Kg: totalCo2Kg,
+    co2KgPerKm,
+    cabinClass,
+    groupSize: safeGroupSize,
+    perPersonCo2Kg,
+    totalCo2Kg,
+    equivalentKmByCar: totalCo2Kg / CAR_EMISSION_PER_KM,
+    equivalentKmByTrain: totalCo2Kg / TRAIN_EMISSION_PER_KM,
+    treesNeededToOffset: Math.ceil(totalCo2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+  }
 }
 
 /**
