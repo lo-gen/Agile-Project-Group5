@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { cities } from '../data/cities'
 import { useFlightContext } from '../context/FlightContext'
+import { useAuth } from '../context/AuthContext'
 import type { CabinClass } from '../types'
 import { filterCities, getCityCountries } from '../utils/cityFilters'
+import { useFavorites } from '../hooks/useFavorites'
 import {
   createDefaultRoutePlanner,
   type RouteOption,
@@ -94,6 +96,8 @@ function scaleOption(option: RouteOption, travelerCount: number, directFlightCo2
 export default function RoutePlannerDashboard() {
   const planner = useMemo(() => createDefaultRoutePlanner(), [])
   const { state: flightState, setGroupSize } = useFlightContext()
+  const { user } = useAuth()
+  const { favorites, saveFavorite, deleteFavorite } = useFavorites()
   const [originId, setOriginId] = useState('')
   const [destinationId, setDestinationId] = useState('')
   const [cabinClass, setCabinClass] = useState<CabinClass>(londonToHelsinkiExampleRequest.cabinClass)
@@ -236,6 +240,45 @@ export default function RoutePlannerDashboard() {
           ) : null}
         </header>
 
+        {user && favorites.length > 0 && (
+          <section className="grid gap-2 rounded-xl border border-eco-border bg-eco-bg p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Favoriter</p>
+            {favorites.map((fav) => (
+              <div key={fav.id} className="flex items-center justify-between gap-2 rounded-lg border border-eco-border bg-eco-panel px-3 py-2 text-sm">
+                <span className="text-eco-text">
+                  {fav.origin_city} → {fav.destination_city}
+                  <span className="ml-1 text-xs text-eco-muted capitalize">({fav.cabin_class})</span>
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const origin = cities.find((c) => c.name === fav.origin_city)
+                      const destination = cities.find((c) => c.name === fav.destination_city)
+                      if (origin) setOriginId(origin.id)
+                      if (destination) setDestinationId(destination.id)
+                      setOriginCountry(fav.origin_country)
+                      setDestinationCountry(fav.destination_country)
+                      setCabinClass(fav.cabin_class)
+                      setStrategy(fav.route_strategy as RouteStrategy)
+                    }}
+                    className="rounded border border-eco-border px-2 py-0.5 text-xs text-eco-text transition hover:border-eco-green hover:text-eco-green"
+                  >
+                    Ladda
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void deleteFavorite(fav.id)}
+                    className="rounded border border-eco-border px-2 py-0.5 text-xs text-eco-muted transition hover:border-red-400 hover:text-red-300"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
         <section className="grid gap-3 rounded-xl border border-eco-border bg-eco-bg p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
@@ -354,6 +397,29 @@ export default function RoutePlannerDashboard() {
           >
             Plan journey
           </button>
+
+          {user && originId && destinationId && options.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const origin = getCityById(originId)
+                const destination = getCityById(destinationId)
+                if (origin && destination) {
+                  void saveFavorite({
+                    originCity: origin.name,
+                    destinationCity: destination.name,
+                    originCountry: originCountry,
+                    destinationCountry: destinationCountry,
+                    cabinClass: cabinClass,
+                    routeStrategy: strategy,
+                  })
+                }
+              }}
+              className="rounded-md border border-eco-border px-4 py-2 text-sm font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
+            >
+              Spara som favorit
+            </button>
+          )}
         </section>
 
         <section className="grid gap-3 rounded-xl border border-eco-border bg-eco-bg p-4">
