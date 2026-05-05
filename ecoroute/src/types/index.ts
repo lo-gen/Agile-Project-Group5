@@ -74,6 +74,18 @@ export interface AuthContextValue {
   logout: () => Promise<void>
 }
 
+// Favorites types
+export interface SavedFavorite {
+  id: string
+  origin_city: string
+  destination_city: string
+  origin_country: string
+  destination_country: string
+  cabin_class: CabinClass
+  route_strategy: string
+  created_at: string
+}
+
 // Flight history types
 export interface SavedFlight {
   id: string
