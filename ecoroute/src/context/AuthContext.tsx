@@ -33,9 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth()
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const handleAuthStateChange = (
+      _event: string,
+      session: { user?: { id: string; email?: string | null } | null } | null,
+    ) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -44,7 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null)
       }
-    })
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
     return () => subscription?.unsubscribe()
   }, [])

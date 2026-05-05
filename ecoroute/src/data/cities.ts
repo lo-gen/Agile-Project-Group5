@@ -1,4 +1,4 @@
-import type { City } from '../types'
+﻿import type { City } from '../types'
 
 export const cities: City[] = [
   { id: "nys", name: "New York", country: "US", iata: "NYS", lat: 40.73399083, lng: -73.97291638 },
