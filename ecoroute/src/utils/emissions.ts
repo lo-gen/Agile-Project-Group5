@@ -72,17 +72,23 @@ export function calculateFlightEmissions(
 export function calculateCarEmissions(
   origin: City,
   destination: City,
+  groupSize = 1,
 ): EmissionsResult {
   const distanceKm = haversineDistanceKm(origin, destination)
-  const co2Kg = distanceKm * CAR_EMISSION_PER_KM
+  const safeGroupSize = Math.max(1, Math.floor(groupSize))
+  const perPersonCo2Kg = distanceKm * CAR_EMISSION_PER_KM
+  const totalCo2Kg = perPersonCo2Kg * safeGroupSize
 
   return {
     distanceKm,
-    co2Kg,
+    co2Kg: totalCo2Kg,
     co2KgPerKm: CAR_EMISSION_PER_KM,
+    groupSize: safeGroupSize,
+    perPersonCo2Kg,
+    totalCo2Kg,
     equivalentKmByCar: distanceKm,
-    equivalentKmByTrain: co2Kg / TRAIN_EMISSION_PER_KM,
-    treesNeededToOffset: Math.ceil(co2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+    equivalentKmByTrain: totalCo2Kg / TRAIN_EMISSION_PER_KM,
+    treesNeededToOffset: Math.ceil(totalCo2Kg / TREE_ABSORPTION_KG_PER_YEAR),
   }
 }
 
@@ -94,16 +100,22 @@ export function calculateCarEmissions(
 export function calculateTrainEmissions(
   origin: City,
   destination: City,
+  groupSize = 1,
 ): EmissionsResult {
   const distanceKm = haversineDistanceKm(origin, destination)
-  const co2Kg = distanceKm * TRAIN_EMISSION_PER_KM
+  const safeGroupSize = Math.max(1, Math.floor(groupSize))
+  const perPersonCo2Kg = distanceKm * TRAIN_EMISSION_PER_KM
+  const totalCo2Kg = perPersonCo2Kg * safeGroupSize
 
   return {
     distanceKm,
-    co2Kg,
+    co2Kg: totalCo2Kg,
     co2KgPerKm: TRAIN_EMISSION_PER_KM,
-    equivalentKmByCar: co2Kg / CAR_EMISSION_PER_KM,
+    groupSize: safeGroupSize,
+    perPersonCo2Kg,
+    totalCo2Kg,
+    equivalentKmByCar: totalCo2Kg / CAR_EMISSION_PER_KM,
     equivalentKmByTrain: distanceKm,
-    treesNeededToOffset: Math.ceil(co2Kg / TREE_ABSORPTION_KG_PER_YEAR),
+    treesNeededToOffset: Math.ceil(totalCo2Kg / TREE_ABSORPTION_KG_PER_YEAR),
   }
 }

@@ -1,4 +1,4 @@
-import { useFlightContext } from '../../context/FlightContext'
+import { useFlightContext } from '../../hooks/useFlightContext'
 import type { CabinClass } from '../../types'
 
 const CLASSES: { value: CabinClass; label: string }[] = [

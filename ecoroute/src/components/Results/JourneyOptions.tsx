@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { JourneyOption } from '../../types'
-import { useJourneyContext } from '../../context/JourneyContext'
+import { useJourneyContext } from '../../hooks/useJourneyContext'
 
 interface JourneyOptionsProps {
   options: JourneyOption[]

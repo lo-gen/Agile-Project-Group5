@@ -1,4 +1,4 @@
-import { useFlightContext } from '../../context/FlightContext'
+import { useFlightContext } from '../../hooks/useFlightContext'
 import { transportModes } from '../../data/transportModes'
 import { COLOR_FLIGHT } from '../../utils/constants'
 

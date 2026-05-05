@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react'
 import type { JourneyAction, JourneyContextValue, JourneyState } from '../types'
 import { generateJourneyOptions } from '../utils/journeyGenerator'
-import { useFlightContext } from './FlightContext'
+import { FlightContext } from './FlightContext'
 
 const initialState: JourneyState = {
   journeyOptions: null,
@@ -23,9 +23,15 @@ function journeyReducer(state: JourneyState, action: JourneyAction): JourneyStat
 
 const JourneyContext = createContext<JourneyContextValue | null>(null)
 
+export { JourneyContext }
+
 export function JourneyProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(journeyReducer, initialState)
-  const { state: flightState } = useFlightContext()
+  const flightContext = useContext(FlightContext)
+  if (!flightContext) {
+    throw new Error('JourneyProvider must be used within FlightProvider')
+  }
+  const { state: flightState } = flightContext
 
   useEffect(() => {
     if (!flightState.origin || !flightState.destination) {
@@ -54,10 +60,3 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useJourneyContext() {
-  const context = useContext(JourneyContext)
-  if (!context) {
-    throw new Error('useJourneyContext must be used within JourneyProvider')
-  }
-  return context
-}

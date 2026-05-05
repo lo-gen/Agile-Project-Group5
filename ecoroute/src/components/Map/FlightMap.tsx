@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
 import { cities } from '../../data/cities'
-import { useFlightContext } from '../../context/FlightContext'
+import { useFlightContext } from '../../hooks/useFlightContext'
 import FlightArc from './FlightArc'
 import type { City } from '../../types'
 import {

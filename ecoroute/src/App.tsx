@@ -10,7 +10,7 @@ import AboutPage from './pages/AboutPage'
 import AuthButton from './components/Auth/AuthButton'
 import LoginModal from './components/Auth/LoginModal'
 import FlightHistorySidebar from './components/History/FlightHistorySidebar'
-import { useJourneyContext } from './context/JourneyContext'
+import { useJourneyContext } from './hooks/useJourneyContext'
 
 function BrandIcon() {
   return (

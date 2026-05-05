@@ -16,7 +16,6 @@ export interface EmissionsResult {
   co2Kg: number;
   co2KgPerKm: number;
   cabinClass?: CabinClass;
-  cabinClass: CabinClass
   groupSize: number;
   perPersonCo2Kg: number;
   totalCo2Kg: number;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, type ReactNode } from 'react'
+import { createContext, useReducer, type ReactNode } from 'react'
 import type { FlightState, FlightAction, City, CabinClass, SavedFlight } from '../types'
 import { calculateFlightEmissions } from '../utils/emissions'
 import { supabase } from '../lib/supabase'
@@ -78,7 +78,10 @@ interface FlightContextValue {
   saveFlightToHistory: (originCity: string, destCity: string, cabinClass: CabinClass, emissionsKg: number, distanceKm: number) => Promise<void>
 }
 
+export type { FlightContextValue }
 const FlightContext = createContext<FlightContextValue | null>(null)
+
+export { FlightContext }
 
 export function FlightProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(flightReducer, initialState)
@@ -138,8 +141,3 @@ export function FlightProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useFlightContext(): FlightContextValue {
-  const ctx = useContext(FlightContext)
-  if (!ctx) throw new Error('useFlightContext must be used within FlightProvider')
-  return ctx
-}

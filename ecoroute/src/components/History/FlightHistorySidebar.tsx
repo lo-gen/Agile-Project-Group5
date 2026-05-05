@@ -2,7 +2,7 @@
 import type { SavedFlight } from '../../types'
 import { useAuth } from '../../context/AuthContext'
 import { useFlightHistory } from '../../hooks/useFlightHistory'
-import { useFlightContext } from '../../context/FlightContext'
+import { useFlightContext } from '../../hooks/useFlightContext'
 import { supabase } from '../../lib/supabase'
 import FlightHistoryItem from './FlightHistoryItem'
 

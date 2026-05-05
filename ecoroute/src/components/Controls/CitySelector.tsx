@@ -1,5 +1,5 @@
 import { cities } from '../../data/cities'
-import { useFlightContext } from '../../context/FlightContext'
+import { useFlightContext } from '../../hooks/useFlightContext'
 import type { City } from '../../types'
 
 function CityDropdown({
