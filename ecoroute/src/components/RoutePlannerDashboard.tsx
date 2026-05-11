@@ -126,6 +126,7 @@ export default function RoutePlannerDashboard() {
   const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [isMapVisible, setIsMapVisible] = useState(true)
   const countries = useMemo(() => getCityCountries(cities), [])
 
   const originCities = useMemo(
@@ -298,7 +299,7 @@ export default function RoutePlannerDashboard() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-eco-bg font-sans text-eco-text">
-      <aside className="flex h-full w-[38%] flex-col gap-4 overflow-y-auto border-r border-eco-border bg-eco-panel p-5">
+      <aside className={`flex h-full flex-col gap-4 overflow-y-auto bg-eco-panel p-5 ${isMapVisible ? 'w-[38%] border-r border-eco-border' : 'w-full'}`}>
         <header className="space-y-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">EcoRoute Planner</p>
@@ -636,9 +637,26 @@ export default function RoutePlannerDashboard() {
         </section>
       </aside>
 
-      <main className="h-full w-[62%]">
-        <RoutePlannerMap route={activeRoute} />
-      </main>
+      {isMapVisible ? (
+        <main className="relative h-full w-[62%]">
+          <button
+            type="button"
+            onClick={() => setIsMapVisible(false)}
+            className="absolute right-4 top-4 z-[1000] rounded-md border border-eco-border bg-eco-panel px-3 py-1.5 text-xs font-semibold text-eco-text transition hover:border-eco-green hover:text-eco-green"
+          >
+            Hide map
+          </button>
+          <RoutePlannerMap route={activeRoute} />
+        </main>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsMapVisible(true)}
+          className="fixed right-4 top-4 z-[1000] rounded-md border border-eco-border bg-eco-panel px-3 py-1.5 text-xs font-semibold text-eco-text shadow-lg transition hover:border-eco-green hover:text-eco-green"
+        >
+          Show map
+        </button>
+      )}
     </div>
   )
 }
