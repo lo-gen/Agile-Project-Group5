@@ -27,4 +27,4 @@ def load_routes_dataframe() -> pd.DataFrame:
 
 if __name__ == "__main__":
     df_routes = load_routes_dataframe()
-    print(df_routes.head())
+    print(df_routes)
