@@ -1,5 +1,5 @@
 interface ImportMetaEnv {
-    readonly Vite_TIM_API_KEY: string;
+    readonly VITE_TIM_API_KEY: string;
 }
 
 interface ImportMetaEnv {
