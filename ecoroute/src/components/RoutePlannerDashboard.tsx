@@ -108,6 +108,7 @@ export default function RoutePlannerDashboard() {
   const [selectedOptionId, setSelectedOptionId] = useState('')
   const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
+  const [isMapHidden, setIsMapHidden] = useState(false)
   const countries = useMemo(() => getCityCountries(cities), [])
 
   const originCities = useMemo(
@@ -224,14 +225,26 @@ export default function RoutePlannerDashboard() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-eco-bg font-sans text-eco-text">
-      <aside className="flex h-full w-[38%] flex-col gap-4 overflow-y-auto border-r border-eco-border bg-eco-panel p-5">
+      <aside
+        className="flex h-full shrink-0 flex-col gap-4 overflow-y-auto border-r border-eco-border bg-eco-panel p-5"
+        style={{ width: isMapHidden ? '100%' : '38%' }}
+      >
         <header className="space-y-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">EcoRoute Planner</p>
-            <h1 className="text-3xl font-semibold text-eco-text">Multi-modal journey planner</h1>
-            <p className="mt-1 text-sm text-eco-muted">
-              Compare flights, trains, cars, buses, ferries, and walking in one editable trip.
-            </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">EcoRoute Planner</p>
+              <h1 className="text-3xl font-semibold text-eco-text">Multi-modal journey planner</h1>
+              <p className="mt-1 text-sm text-eco-muted">
+                Compare flights, trains, cars, buses, ferries, and walking in one editable trip.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMapHidden((current) => !current)}
+              className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
+            >
+              {isMapHidden ? 'Show map' : 'Hide map'}
+            </button>
           </div>
           {statusMessage ? (
             <div className="rounded-lg border border-eco-border bg-eco-bg px-3 py-2 text-sm text-eco-muted">
@@ -551,9 +564,11 @@ export default function RoutePlannerDashboard() {
         </section>
       </aside>
 
-      <main className="h-full w-[62%]">
-        <RoutePlannerMap route={activeRoute} />
-      </main>
+      {!isMapHidden ? (
+        <main className="h-full shrink-0" style={{ width: '62%' }}>
+          <RoutePlannerMap route={activeRoute} />
+        </main>
+      ) : null}
     </div>
   )
 }
