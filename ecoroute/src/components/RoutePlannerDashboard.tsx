@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import type { CabinClass } from '../types'
 import { filterCities, getCityCountries } from '../utils/cityFilters'
 import { useFavorites } from '../hooks/useFavorites'
+import { haversineDistanceKm } from '../utils/distance'
 import {
   createDefaultRoutePlanner,
   type RouteOption,
@@ -93,6 +94,21 @@ function scaleOption(option: RouteOption, travelerCount: number, directFlightCo2
   )
 }
 
+function getNearestCity(userLat: number, userLng: number) {
+  let nearestCity = cities[0]
+  let minDistance = haversineDistanceKm({ lat: userLat, lng: userLng }, { lat: nearestCity.lat, lng: nearestCity.lng })
+
+  for (const city of cities) {
+    const distance = haversineDistanceKm({ lat: userLat, lng: userLng }, { lat: city.lat, lng: city.lng })
+    if (distance < minDistance) {
+      minDistance = distance
+      nearestCity = city
+    }
+  }
+
+  return nearestCity
+}
+
 export default function RoutePlannerDashboard() {
   const planner = useMemo(() => createDefaultRoutePlanner(), [])
   const { state: flightState, setGroupSize } = useFlightContext()
@@ -108,6 +124,7 @@ export default function RoutePlannerDashboard() {
   const [selectedOptionId, setSelectedOptionId] = useState('')
   const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null)
   const [statusMessage, setStatusMessage] = useState('')
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const countries = useMemo(() => getCityCountries(cities), [])
 
   const originCities = useMemo(
@@ -119,6 +136,48 @@ export default function RoutePlannerDashboard() {
     () => filterCities(cities, { query: '', country: destinationCountry, excludeId: originId }),
     [destinationCountry, destinationId, originId],
   )
+
+  const handleUseCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setStatusMessage('Geolocation is not supported by this browser.')
+      return
+    }
+
+    setIsLoadingLocation(true)
+    setStatusMessage('Getting your current location...')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        const nearestCity = getNearestCity(latitude, longitude)
+        setOriginId(nearestCity.id)
+        setOriginCountry(nearestCity.country)
+        setStatusMessage(`Using your current location: ${nearestCity.name}, ${nearestCity.country}`)
+        setIsLoadingLocation(false)
+      },
+      (error) => {
+        let errorMessage = 'Unable to get your location.'
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please allow location access to use this feature.'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable.'
+            break
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.'
+            break
+        }
+        setStatusMessage(errorMessage)
+        setIsLoadingLocation(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000, // 5 minutes
+      }
+    )
+  }, [])
 
   const planJourney = useCallback(async () => {
     const travelerCount = flightState.groupSize
@@ -307,6 +366,14 @@ export default function RoutePlannerDashboard() {
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={isLoadingLocation}
+                className="mt-1 rounded-md border border-eco-green bg-eco-green px-3 py-1 text-xs text-white transition hover:bg-eco-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingLocation ? 'Getting location...' : 'Use Current Location'}
+              </button>
             </label>
 
             <label className="flex flex-col gap-1 text-sm">
