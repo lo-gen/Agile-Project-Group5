@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cities } from '../data/cities'
 import { useFlightContext } from '../context/FlightContext'
 import { useAuth } from '../context/AuthContext'
@@ -111,9 +111,10 @@ function getNearestCity(userLat: number, userLng: number) {
 
 export default function RoutePlannerDashboard() {
   const planner = useMemo(() => createDefaultRoutePlanner(), [])
-  const { state: flightState, setGroupSize } = useFlightContext()
+  const { state: flightState, setGroupSize, saveFlightToHistory } = useFlightContext()
   const { user } = useAuth()
   const { favorites, saveFavorite, deleteFavorite } = useFavorites()
+  const saveHistoryOnNextPlan = useRef(false)
   const [originId, setOriginId] = useState('')
   const [destinationId, setDestinationId] = useState('')
   const [cabinClass, setCabinClass] = useState<CabinClass>(londonToHelsinkiExampleRequest.cabinClass)
@@ -250,7 +251,21 @@ export default function RoutePlannerDashboard() {
       ...selected,
       segments: cloneSegments(selected.segments),
     })
-  }, [cabinClass, destinationId, flightState.groupSize, originId, planner, strategy])
+
+    if (saveHistoryOnNextPlan.current && user && origin && destination) {
+      saveHistoryOnNextPlan.current = false
+      const directFlight = nextOptions.find((o) => o.strategy === 'direct-flight')
+      if (directFlight) {
+        void saveFlightToHistory(
+          origin.name,
+          destination.name,
+          cabinClass,
+          directFlight.totalCo2Kg,
+          directFlight.totalDistanceKm,
+        )
+      }
+    }
+  }, [cabinClass, destinationId, flightState.groupSize, originId, planner, saveFlightToHistory, strategy, user])
 
   useEffect(() => {
     void planJourney()
@@ -459,7 +474,10 @@ export default function RoutePlannerDashboard() {
 
           <button
             type="button"
-            onClick={() => void planJourney()}
+            onClick={() => {
+              saveHistoryOnNextPlan.current = true
+              void planJourney()
+            }}
             className="rounded-md bg-eco-green px-4 py-2 text-sm font-semibold text-eco-bg transition hover:opacity-90"
           >
             Plan journey
