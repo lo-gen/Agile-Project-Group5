@@ -1,6 +1,7 @@
 export interface City {
   id: string;
   name: string;
+  city: string;
   country: string;
   iata: string;
   lat: number;
