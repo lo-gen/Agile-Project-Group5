@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import RoutePlannerDashboard from './pages/RoutePlannerDashboard'
 import AffiliateProgramPage from './pages/AffiliateProgramPage'
 import AboutPage from './pages/AboutPage'
+import AccountPage from './pages/AccountPage'
 import AuthButton from './components/Auth/AuthButton'
 import LoginModal from './components/Auth/LoginModal'
+import { useAuth } from './context/AuthContext'
 
 function getHashRoute(hash: string) {
   if (!hash || hash === '#/' || hash === '#') {
@@ -17,6 +19,7 @@ function getHashRoute(hash: string) {
 export default function App() {
   const [route, setRoute] = useState(() => getHashRoute(window.location.hash))
   const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const { user } = useAuth()
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -31,6 +34,8 @@ export default function App() {
     <AffiliateProgramPage />
   ) : route === '/about' ? (
     <AboutPage />
+  ) : route === '/account' ? (
+    <AccountPage />
   ) : (
     <RoutePlannerDashboard />
   )
@@ -62,6 +67,14 @@ export default function App() {
             >
               Affiliate Marketing
             </a>
+            {user && (
+              <a
+                href="#/account"
+                className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium transition hover:border-eco-green hover:text-eco-green"
+              >
+                Min historik
+              </a>
+            )}
           </nav>
 
           <AuthButton onLoginClick={() => setIsLoginOpen(true)} />
