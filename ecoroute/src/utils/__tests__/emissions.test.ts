@@ -4,15 +4,15 @@ import type { City } from '../../types'
 import { CAR_EMISSION_PER_KM, TRAIN_EMISSION_PER_KM, TREE_ABSORPTION_KG_PER_YEAR } from '../../utils/constants'
 
 const stockholm: City = {
-  id: 'arn', name: 'Stockholm', country: 'Sweden',
+  id: 'arn', name: 'Stockholm', city: 'Stockholm', country: 'Sweden',
   iata: 'ARN', lat: 59.651901, lng: 17.918600,
 }
 const london: City = {
-  id: 'lhr', name: 'London', country: 'United Kingdom',
+  id: 'lhr', name: 'London', city: 'London', country: 'United Kingdom',
   iata: 'LHR', lat: 51.4706, lng: -0.461941,
 }
 const lisbon: City = {
-  id: 'lis', name: 'Lisbon', country: 'Portugal',
+  id: 'lis', name: 'Lisbon', city: 'Lisbon', country: 'Portugal',
   iata: 'LIS', lat: 38.7813, lng: -9.13592,
 }
 
@@ -27,7 +27,7 @@ describe('calculateFlightEmissions', () => {
   it('uses short-haul emission factor for distances under 1500 km', () => {
     // Stockholm→Copenhagen is well under 1500 km
     const copenhagen: City = {
-      id: 'cph', name: 'Copenhagen', country: 'Denmark',
+      id: 'cph', name: 'Copenhagen', city: 'Copenhagen', country: 'Denmark',
       iata: 'CPH', lat: 55.617900, lng: 12.656000,
     }
     const result = calculateFlightEmissions(stockholm, copenhagen, 'economy')

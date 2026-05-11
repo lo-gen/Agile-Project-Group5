@@ -17,8 +17,8 @@ export default function FlightHistorySidebar() {
     if (!flight) return
     // Find cities in data to get full city data
     // For now, just set the name - coordinates will be looked up if needed
-    setOrigin({ id: '', name: flight.origin_city, country: '', iata: '', lat: 0, lng: 0 })
-    setDestination({ id: '', name: flight.destination_city, country: '', iata: '', lat: 0, lng: 0 })
+    setOrigin({ id: '', name: flight.origin_city, city: flight.origin_city, country: '', iata: '', lat: 0, lng: 0 })
+    setDestination({ id: '', name: flight.destination_city, city: flight.destination_city, country: '', iata: '', lat: 0, lng: 0 })
     setCabinClass(flight.cabin_class)
   }
 
