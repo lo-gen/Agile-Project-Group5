@@ -33,6 +33,8 @@ export async function getTypicalEmissions(
     }
   );
 
+  
+
   if (!res.ok) throw new Error(`TIM API error: ${res.status}`);
   return res.json();
 }
