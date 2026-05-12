@@ -1,4 +1,4 @@
-import { cities } from '../data/cities'
+import { cities } from '../data/cities_clean'
 import type { RouteRequest } from './types'
 
 const london = cities.find((city) => city.id === 'lhr')!

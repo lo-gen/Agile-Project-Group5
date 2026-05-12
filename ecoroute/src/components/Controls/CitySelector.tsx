@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { cities } from '../../data/cities'
+import { cities } from '../../data/cities_clean'
 import { useFlightContext } from '../../context/FlightContext'
 import type { City } from '../../types'
 import { filterCities, getCityCountries } from '../../utils/cityFilters'

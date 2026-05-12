@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cities } from '../data/cities'
+import { cities } from '../data/cities_clean'
 import { useFlightContext } from '../context/FlightContext'
 import { useAuth } from '../context/AuthContext'
 import type { CabinClass } from '../types'
