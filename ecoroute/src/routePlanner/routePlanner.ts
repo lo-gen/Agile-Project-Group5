@@ -1,4 +1,4 @@
-import { cities } from '../data/cities'
+import { cities } from '../data/cities_clean'
 import type { City } from '../types'
 import type {
   RouteOption,

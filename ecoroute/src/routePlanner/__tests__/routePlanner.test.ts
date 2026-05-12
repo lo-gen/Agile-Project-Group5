@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cities } from '../../data/cities'
+import { cities } from '../../data/cities_clean'
 import { createDefaultRoutePlanner, londonToHelsinkiExampleRequest, londonToHelsinkiExampleRoute } from '../index'
 
 const london = cities.find((city) => city.id === 'lhr')!
