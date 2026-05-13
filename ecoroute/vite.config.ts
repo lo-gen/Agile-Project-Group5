@@ -5,7 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/Agile-Project-Group5/',
-
+  server: {
+    hmr: true, // hot reload
+  },
   test: {
     globals: true,
     environment: 'jsdom',
