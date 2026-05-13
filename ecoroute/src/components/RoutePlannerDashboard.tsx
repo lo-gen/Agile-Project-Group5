@@ -371,10 +371,6 @@ export default function RoutePlannerDashboard() {
             <h1 className="text-3xl font-semibold text-eco-text">
               Multi-modal journey planner
             </h1>
-            <p className="mt-1 text-sm text-eco-muted">
-              Compare flights, trains, cars, buses, ferries, and walking in one
-              editable trip.
-            </p>
           </div>
           {statusMessage ? (
             <div className="rounded-lg border border-eco-border bg-eco-bg px-3 py-2 text-sm text-eco-muted">
