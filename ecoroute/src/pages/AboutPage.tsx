@@ -1,6 +1,6 @@
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-eco-bg px-4 py-10 font-sans text-eco-text sm:px-8">
+    <div className="h-full overflow-y-auto bg-eco-bg px-4 py-10 font-sans text-eco-text sm:px-8">
       <div className="mx-auto max-w-3xl">
         <section className="rounded-2xl border border-eco-border bg-eco-panel p-7">
           <p className="inline-flex rounded-full border border-eco-border px-3 py-1 text-xs font-medium text-eco-green">

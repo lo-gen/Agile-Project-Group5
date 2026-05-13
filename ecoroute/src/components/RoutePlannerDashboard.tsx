@@ -359,7 +359,7 @@ export default function RoutePlannerDashboard() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-eco-bg font-sans text-eco-text">
+    <div className="flex h-full w-full overflow-hidden bg-eco-bg font-sans text-eco-text">
       <aside
         className={`flex h-full flex-col gap-4 overflow-y-auto bg-eco-panel p-5 ${isMapVisible ? "w-[38%] border-r border-eco-border" : "w-full"}`}
       >

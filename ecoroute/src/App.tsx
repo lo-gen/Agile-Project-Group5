@@ -42,8 +42,8 @@ export default function App() {
     );
 
   return (
-    <div className="min-h-screen bg-eco-bg text-eco-text">
-      <header className="sticky top-0 z-50 border-b border-eco-border bg-eco-panel/95 backdrop-blur">
+    <div className="flex h-screen flex-col bg-eco-bg text-eco-text">
+      <header className="shrink-0 border-b border-eco-border bg-eco-panel/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <a
             href="#/"
@@ -85,7 +85,7 @@ export default function App() {
         </div>
       </header>
 
-      <main>{page}</main>
+      <main className="min-h-0 flex-1 overflow-hidden">{page}</main>
 
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
