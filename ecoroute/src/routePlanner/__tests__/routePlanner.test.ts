@@ -73,4 +73,22 @@ describe('RoutePlannerService', () => {
     expect(londonToHelsinkiExampleRoute.segments[0].transportKind).toBe('train')
     expect(londonToHelsinkiExampleRoute.segments[1].transportKind).toBe('flight')
   })
+
+  it('keeps direct-flight option connected from origin to destination', () => {
+    const result = planner.buildOptions({
+      origin: london,
+      destination: helsinki,
+      cabinClass: 'economy',
+      strategy: 'direct-flight',
+    })
+    const directFlight = result.options.find((option) => option.strategy === 'direct-flight')!
+
+    expect(directFlight.segments.length).toBeGreaterThan(0)
+    expect(directFlight.segments[0].from.id).toBe(london.id)
+    expect(directFlight.segments[directFlight.segments.length - 1].to.id).toBe(helsinki.id)
+
+    for (let index = 0; index < directFlight.segments.length - 1; index += 1) {
+      expect(directFlight.segments[index].to.id).toBe(directFlight.segments[index + 1].from.id)
+    }
+  })
 })
