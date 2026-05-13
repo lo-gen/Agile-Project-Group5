@@ -1,64 +1,65 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cities } from '../data/cities'
-import { useFlightContext } from '../context/FlightContext'
-import { useAuth } from '../context/AuthContext'
-import type { CabinClass } from '../types'
-import { filterCities, getCityCountries } from '../utils/cityFilters'
-import { useFavorites } from '../hooks/useFavorites'
-import { haversineDistanceKm } from '../utils/distance'
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cities } from "../data/cities_clean";
+import { useFlightContext } from "../context/FlightContext";
+import { useAuth } from "../context/AuthContext";
+import type { CabinClass } from "../types";
+import { filterCities, getCityCountries } from "../utils/cityFilters";
+import { useFavorites } from "../hooks/useFavorites";
+import { haversineDistanceKm } from "../utils/distance";
 import {
   createDefaultRoutePlanner,
   type RouteOption,
   type RouteSegment,
   type RouteStrategy,
   londonToHelsinkiExampleRequest,
-} from '../routePlanner'
-import { fetchOsrmRoadRoute } from '../routePlanner/roadRouting'
-import RoutePlannerMap from './RoutePlanner/RoutePlannerMap'
+} from "../routePlanner";
+import { fetchOsrmRoadRoute } from "../routePlanner/roadRouting";
+import RoutePlannerMap from "./RoutePlanner/RoutePlannerMap";
 
 const strategies: Array<{ value: RouteStrategy; label: string }> = [
-  { value: 'multi-modal', label: 'Multi-modal' },
-  { value: 'direct-flight', label: 'Direct flight' },
-  { value: 'drive', label: 'Drive' },
-  { value: 'full-train', label: 'Full train' },
-]
+  { value: "direct-flight", label: "Direct flight" },
+  { value: "multi-modal", label: "Multi-modal" },
+  { value: "drive", label: "Drive" },
+  { value: "full-train", label: "Full train" },
+];
 
 const cabinClasses: Array<{ value: CabinClass; label: string }> = [
-  { value: 'economy', label: 'Economy' },
-  { value: 'business', label: 'Business' },
-  { value: 'first', label: 'First' },
-]
+  { value: "economy", label: "Economy" },
+  { value: "business", label: "Business" },
+  { value: "first", label: "First" },
+];
 
 function formatDistance(distanceKm: number) {
-  return `${distanceKm.toLocaleString('en-GB', { maximumFractionDigits: 0 })} km`
+  return `${distanceKm.toLocaleString("en-GB", { maximumFractionDigits: 0 })} km`;
 }
 
 function formatTime(minutes: number) {
-  const hours = Math.floor(minutes / 60)
-  const remainingMinutes = minutes % 60
-  if (hours === 0) return `${remainingMinutes}m`
-  if (remainingMinutes === 0) return `${hours}h`
-  return `${hours}h ${remainingMinutes}m`
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours === 0) return `${remainingMinutes}m`;
+  if (remainingMinutes === 0) return `${hours}h`;
+  return `${hours}h ${remainingMinutes}m`;
 }
 
 function formatDeltaKg(value: number) {
-  const prefix = value >= 0 ? '+' : '−'
-  return `${prefix}${Math.abs(value).toLocaleString('en-GB', { maximumFractionDigits: 0 })} kg`
+  const prefix = value >= 0 ? "+" : "−";
+  return `${prefix}${Math.abs(value).toLocaleString("en-GB", { maximumFractionDigits: 0 })} kg`;
 }
 
 function getCityById(id: string) {
-  return cities.find((city) => city.id === id) ?? null
+  return cities.find((city) => city.id === id) ?? null;
 }
 
 function cloneSegments(segments: RouteSegment[]) {
-  return segments.map((segment) => ({ ...segment }))
+  return segments.map((segment) => ({ ...segment }));
 }
 
 function recalculateOption(option: RouteOption, directFlightCo2Kg: number) {
   const totals = option.segments.reduce(
     (accumulator, segment) => ({
       totalDistanceKm: accumulator.totalDistanceKm + segment.distanceKm,
-      totalTravelTimeMinutes: accumulator.totalTravelTimeMinutes + segment.travelTimeMinutes,
+      totalTravelTimeMinutes:
+        accumulator.totalTravelTimeMinutes + segment.travelTimeMinutes,
       totalCo2Kg: accumulator.totalCo2Kg + segment.co2Kg,
     }),
     {
@@ -66,23 +67,31 @@ function recalculateOption(option: RouteOption, directFlightCo2Kg: number) {
       totalTravelTimeMinutes: 0,
       totalCo2Kg: 0,
     },
-  )
+  );
 
   return {
     ...option,
     totalDistanceKm: Math.round(totals.totalDistanceKm * 10) / 10,
-    totalTravelTimeMinutes: Math.max(1, Math.round(totals.totalTravelTimeMinutes / 5) * 5),
+    totalTravelTimeMinutes: Math.max(
+      1,
+      Math.round(totals.totalTravelTimeMinutes / 5) * 5,
+    ),
     totalCo2Kg: Math.round(totals.totalCo2Kg * 10) / 10,
-    savingsVsDirectFlightKg: Math.round((directFlightCo2Kg - totals.totalCo2Kg) * 10) / 10,
-  }
+    savingsVsDirectFlightKg:
+      Math.round((directFlightCo2Kg - totals.totalCo2Kg) * 10) / 10,
+  };
 }
 
-function scaleOption(option: RouteOption, travelerCount: number, directFlightCo2Kg: number) {
-  const safeTravelerCount = Math.max(1, Math.floor(travelerCount))
+function scaleOption(
+  option: RouteOption,
+  travelerCount: number,
+  directFlightCo2Kg: number,
+) {
+  const safeTravelerCount = Math.max(1, Math.floor(travelerCount));
   const scaledSegments = option.segments.map((segment) => ({
     ...segment,
     co2Kg: Math.round(segment.co2Kg * safeTravelerCount * 10) / 10,
-  }))
+  }));
 
   return recalculateOption(
     {
@@ -91,132 +100,165 @@ function scaleOption(option: RouteOption, travelerCount: number, directFlightCo2
       totalCo2Kg: option.totalCo2Kg * safeTravelerCount,
     },
     directFlightCo2Kg * safeTravelerCount,
-  )
+  );
 }
 
 function getNearestCity(userLat: number, userLng: number) {
-  let nearestCity = cities[0]
-  let minDistance = haversineDistanceKm({ lat: userLat, lng: userLng }, { lat: nearestCity.lat, lng: nearestCity.lng })
+  let nearestCity = cities[0];
+  let minDistance = haversineDistanceKm(
+    { lat: userLat, lng: userLng },
+    { lat: nearestCity.lat, lng: nearestCity.lng },
+  );
 
   for (const city of cities) {
-    const distance = haversineDistanceKm({ lat: userLat, lng: userLng }, { lat: city.lat, lng: city.lng })
+    const distance = haversineDistanceKm(
+      { lat: userLat, lng: userLng },
+      { lat: city.lat, lng: city.lng },
+    );
     if (distance < minDistance) {
-      minDistance = distance
-      nearestCity = city
+      minDistance = distance;
+      nearestCity = city;
     }
   }
 
-  return nearestCity
+  return nearestCity;
 }
 
 export default function RoutePlannerDashboard() {
-  const planner = useMemo(() => createDefaultRoutePlanner(), [])
-  const { state: flightState, setGroupSize, saveFlightToHistory } = useFlightContext()
-  const { user } = useAuth()
-  const { favorites, saveFavorite, deleteFavorite } = useFavorites()
-  const saveHistoryOnNextPlan = useRef(false)
-  const [originId, setOriginId] = useState('')
-  const [destinationId, setDestinationId] = useState('')
-  const [cabinClass, setCabinClass] = useState<CabinClass>(londonToHelsinkiExampleRequest.cabinClass)
-  const [strategy, setStrategy] = useState<RouteStrategy>(londonToHelsinkiExampleRequest.strategy)
-  const [originCountry, setOriginCountry] = useState('')
-  const [destinationCountry, setDestinationCountry] = useState('')
-  const [options, setOptions] = useState<RouteOption[]>([])
-  const [selectedOptionId, setSelectedOptionId] = useState('')
-  const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null)
-  const [statusMessage, setStatusMessage] = useState('')
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
-  const [isMapVisible, setIsMapVisible] = useState(true)
-  const countries = useMemo(() => getCityCountries(cities), [])
+  const planner = useMemo(() => createDefaultRoutePlanner(), []);
+  const {
+    state: flightState,
+    setGroupSize,
+    saveFlightToHistory,
+  } = useFlightContext();
+  const { user } = useAuth();
+  const { favorites, saveFavorite, deleteFavorite } = useFavorites();
+  const saveHistoryOnNextPlan = useRef(false);
+  const [originId, setOriginId] = useState("");
+  const [destinationId, setDestinationId] = useState("");
+  const [cabinClass, setCabinClass] = useState<CabinClass>(
+    londonToHelsinkiExampleRequest.cabinClass,
+  );
+  const [strategy, setStrategy] = useState<RouteStrategy>(
+    londonToHelsinkiExampleRequest.strategy,
+  );
+  const [originCountry, setOriginCountry] = useState("");
+  const [destinationCountry, setDestinationCountry] = useState("");
+  const [options, setOptions] = useState<RouteOption[]>([]);
+  const [selectedOptionId, setSelectedOptionId] = useState("");
+  const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isMapVisible, setIsMapVisible] = useState(true);
+  const countries = useMemo(() => getCityCountries(cities), []);
 
   const originCities = useMemo(
-    () => filterCities(cities, { query: '', country: originCountry, excludeId: destinationId }),
+    () =>
+      filterCities(cities, {
+        query: "",
+        country: originCountry,
+        excludeId: destinationId,
+      }),
     [destinationId, originCountry],
-  )
+  );
 
   const destinationCities = useMemo(
-    () => filterCities(cities, { query: '', country: destinationCountry, excludeId: originId }),
+    () =>
+      filterCities(cities, {
+        query: "",
+        country: destinationCountry,
+        excludeId: originId,
+      }),
     [destinationCountry, destinationId, originId],
-  )
+  );
 
   const handleUseCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setStatusMessage('Geolocation is not supported by this browser.')
-      return
+      setStatusMessage("Geolocation is not supported by this browser.");
+      return;
     }
 
-    setIsLoadingLocation(true)
-    setStatusMessage('Getting your current location...')
+    setIsLoadingLocation(true);
+    setStatusMessage("Getting your current location...");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords
-        const nearestCity = getNearestCity(latitude, longitude)
-        setOriginId(nearestCity.id)
-        setOriginCountry(nearestCity.country)
-        setStatusMessage(`Using your current location: ${nearestCity.name}, ${nearestCity.country}`)
-        setIsLoadingLocation(false)
+        const { latitude, longitude } = position.coords;
+        const nearestCity = getNearestCity(latitude, longitude);
+        setOriginId(nearestCity.id);
+        setOriginCountry(nearestCity.country);
+        setStatusMessage(
+          `Using your current location: ${nearestCity.name}, ${nearestCity.country}`,
+        );
+        setIsLoadingLocation(false);
       },
       (error) => {
-        let errorMessage = 'Unable to get your location.'
+        let errorMessage = "Unable to get your location.";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please allow location access to use this feature.'
-            break
+            errorMessage =
+              "Location access denied. Please allow location access to use this feature.";
+            break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information is unavailable.'
-            break
+            errorMessage = "Location information is unavailable.";
+            break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out.'
-            break
+            errorMessage = "Location request timed out.";
+            break;
         }
-        setStatusMessage(errorMessage)
-        setIsLoadingLocation(false)
+        setStatusMessage(errorMessage);
+        setIsLoadingLocation(false);
       },
       {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 300000, // 5 minutes
-      }
-    )
-  }, [])
+      },
+    );
+  }, []);
 
   const planJourney = useCallback(async () => {
-    const travelerCount = flightState.groupSize
-    const origin = getCityById(originId)
-    const destination = getCityById(destinationId)
+    const travelerCount = flightState.groupSize;
+    const origin = getCityById(originId);
+    const destination = getCityById(destinationId);
 
     const result = planner.buildOptions({
       origin,
       destination,
       cabinClass,
       strategy,
-    })
+    });
 
     let nextOptions = result.options.map((option) =>
       scaleOption(option, travelerCount, result.directFlightCo2Kg),
-    )
+    );
 
     if (origin && destination) {
-      const driveIndex = nextOptions.findIndex((option) => option.strategy === 'drive')
+      const driveIndex = nextOptions.findIndex(
+        (option) => option.strategy === "drive",
+      );
       if (driveIndex >= 0) {
         try {
-          const roadRoute = await fetchOsrmRoadRoute(origin, destination)
-          const driveOption = nextOptions[driveIndex]
+          const roadRoute = await fetchOsrmRoadRoute(origin, destination);
+          const driveOption = nextOptions[driveIndex];
           nextOptions = nextOptions.map((option, optionIndex) => {
-            if (optionIndex !== driveIndex) return option
+            if (optionIndex !== driveIndex) return option;
 
-            const updatedSegments = driveOption.segments.map((segment, segmentIndex) =>
-              segmentIndex === 0
-                ? {
-                    ...segment,
-                    distanceKm: Math.round(roadRoute.distanceKm * 10) / 10,
-                    travelTimeMinutes: Math.max(1, Math.round(roadRoute.durationMinutes / 5) * 5),
-                    co2Kg: Math.round(roadRoute.distanceKm * 0.21 * 10) / 10,
-                    path: roadRoute.path,
-                  }
-                : segment,
-            )
+            const updatedSegments = driveOption.segments.map(
+              (segment, segmentIndex) =>
+                segmentIndex === 0
+                  ? {
+                      ...segment,
+                      distanceKm: Math.round(roadRoute.distanceKm * 10) / 10,
+                      travelTimeMinutes: Math.max(
+                        1,
+                        Math.round(roadRoute.durationMinutes / 5) * 5,
+                      ),
+                      co2Kg: Math.round(roadRoute.distanceKm * 0.21 * 10) / 10,
+                      path: roadRoute.path,
+                    }
+                  : segment,
+            );
 
             return scaleOption(
               {
@@ -225,37 +267,45 @@ export default function RoutePlannerDashboard() {
               },
               travelerCount,
               result.directFlightCo2Kg,
-            )
-          })
-          setStatusMessage(`${result.message} Live road data loaded for the driving route.`)
+            );
+          });
+          setStatusMessage(
+            `${result.message} Live road data loaded for the driving route.`,
+          );
         } catch {
-          setStatusMessage(`${result.message} Live road data is unavailable right now, so the driving route uses a fallback estimate.`)
+          setStatusMessage(
+            `${result.message} Live road data is unavailable right now, so the driving route uses a fallback estimate.`,
+          );
         }
       } else {
-        setStatusMessage(result.message)
+        setStatusMessage(result.message);
       }
     } else {
-      setStatusMessage(result.message)
+      setStatusMessage(result.message);
     }
 
-    setOptions(nextOptions)
+    setOptions(nextOptions);
 
     if (!nextOptions.length) {
-      setActiveRoute(null)
-      setSelectedOptionId('')
-      return
+      setActiveRoute(null);
+      setSelectedOptionId("");
+      return;
     }
 
-    const selected = nextOptions.find((option) => option.strategy === strategy) ?? nextOptions[0]
-    setSelectedOptionId(selected.id)
+    const selected =
+      nextOptions.find((option) => option.strategy === strategy) ??
+      nextOptions[0];
+    setSelectedOptionId(selected.id);
     setActiveRoute({
       ...selected,
       segments: cloneSegments(selected.segments),
-    })
+    });
 
     if (saveHistoryOnNextPlan.current && user && origin && destination) {
-      saveHistoryOnNextPlan.current = false
-      const directFlight = nextOptions.find((o) => o.strategy === 'direct-flight')
+      saveHistoryOnNextPlan.current = false;
+      const directFlight = nextOptions.find(
+        (o) => o.strategy === "direct-flight",
+      );
       if (directFlight) {
         void saveFlightToHistory(
           origin.name,
@@ -263,49 +313,67 @@ export default function RoutePlannerDashboard() {
           cabinClass,
           directFlight.totalCo2Kg,
           directFlight.totalDistanceKm,
-        )
+        );
       }
     }
-  }, [cabinClass, destinationId, flightState.groupSize, originId, planner, saveFlightToHistory, strategy, user])
+  }, [
+    cabinClass,
+    destinationId,
+    flightState.groupSize,
+    originId,
+    planner,
+    saveFlightToHistory,
+    strategy,
+    user,
+  ]);
 
   useEffect(() => {
-    void planJourney()
-  }, [planJourney])
+    void planJourney();
+  }, [planJourney]);
 
-  const bestOption = options.find((option) => option.isBest) ?? null
-  const directFlightCo2Kg = options.find((option) => option.strategy === 'direct-flight')?.totalCo2Kg ?? 0
+  const bestOption = options.find((option) => option.isBest) ?? null;
+  const directFlightCo2Kg =
+    options.find((option) => option.strategy === "direct-flight")?.totalCo2Kg ??
+    0;
 
   const updateActiveRoute = (updater: (route: RouteOption) => RouteOption) => {
     setActiveRoute((current) => {
-      if (!current) return current
-      return recalculateOption(updater(current), directFlightCo2Kg)
-    })
-  }
+      if (!current) return current;
+      return recalculateOption(updater(current), directFlightCo2Kg);
+    });
+  };
 
   const handleSelectOption = (option: RouteOption) => {
-    setSelectedOptionId(option.id)
+    setSelectedOptionId(option.id);
     setActiveRoute({
       ...option,
       segments: cloneSegments(option.segments),
-    })
-  }
+    });
+  };
 
   const handleRemoveSegment = (segmentId: string) => {
     updateActiveRoute((route) => ({
       ...route,
       segments: route.segments.filter((segment) => segment.id !== segmentId),
-    }))
-  }
+    }));
+  };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-eco-bg font-sans text-eco-text">
-      <aside className={`flex h-full flex-col gap-4 overflow-y-auto bg-eco-panel p-5 ${isMapVisible ? 'w-[38%] border-r border-eco-border' : 'w-full'}`}>
+    <div className="flex h-full w-full overflow-hidden bg-eco-bg font-sans text-eco-text">
+      <aside
+        className={`flex h-full flex-col gap-4 overflow-y-auto bg-eco-panel p-5 ${isMapVisible ? "w-[38%] border-r border-eco-border" : "w-full"}`}
+      >
         <header className="space-y-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">EcoRoute Planner</p>
-            <h1 className="text-3xl font-semibold text-eco-text">Multi-modal journey planner</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">
+              EcoRoute Planner
+            </p>
+            <h1 className="text-3xl font-semibold text-eco-text">
+              Multi-modal journey planner
+            </h1>
             <p className="mt-1 text-sm text-eco-muted">
-              Compare flights, trains, cars, buses, ferries, and walking in one editable trip.
+              Compare flights, trains, cars, buses, ferries, and walking in one
+              editable trip.
             </p>
           </div>
           {statusMessage ? (
@@ -317,25 +385,36 @@ export default function RoutePlannerDashboard() {
 
         {user && favorites.length > 0 && (
           <section className="grid gap-2 rounded-xl border border-eco-border bg-eco-bg p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Favoriter</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">
+              Favoriter
+            </p>
             {favorites.map((fav) => (
-              <div key={fav.id} className="flex items-center justify-between gap-2 rounded-lg border border-eco-border bg-eco-panel px-3 py-2 text-sm">
+              <div
+                key={fav.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-eco-border bg-eco-panel px-3 py-2 text-sm"
+              >
                 <span className="text-eco-text">
                   {fav.origin_city} → {fav.destination_city}
-                  <span className="ml-1 text-xs text-eco-muted capitalize">({fav.cabin_class})</span>
+                  <span className="ml-1 text-xs text-eco-muted capitalize">
+                    ({fav.cabin_class})
+                  </span>
                 </span>
                 <div className="flex gap-1">
                   <button
                     type="button"
                     onClick={() => {
-                      const origin = cities.find((c) => c.name === fav.origin_city)
-                      const destination = cities.find((c) => c.name === fav.destination_city)
-                      if (origin) setOriginId(origin.id)
-                      if (destination) setDestinationId(destination.id)
-                      setOriginCountry(fav.origin_country)
-                      setDestinationCountry(fav.destination_country)
-                      setCabinClass(fav.cabin_class)
-                      setStrategy(fav.route_strategy as RouteStrategy)
+                      const origin = cities.find(
+                        (c) => c.name === fav.origin_city,
+                      );
+                      const destination = cities.find(
+                        (c) => c.name === fav.destination_city,
+                      );
+                      if (origin) setOriginId(origin.id);
+                      if (destination) setDestinationId(destination.id);
+                      setOriginCountry(fav.origin_country);
+                      setDestinationCountry(fav.destination_country);
+                      setCabinClass(fav.cabin_class);
+                      setStrategy(fav.route_strategy as RouteStrategy);
                     }}
                     className="rounded border border-eco-border px-2 py-0.5 text-xs text-eco-text transition hover:border-eco-green hover:text-eco-green"
                   >
@@ -357,7 +436,9 @@ export default function RoutePlannerDashboard() {
         <section className="grid gap-3 rounded-xl border border-eco-border bg-eco-bg p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Starting location</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">
+                Starting location
+              </span>
               <select
                 value={originCountry}
                 onChange={(event) => setOriginCountry(event.target.value)}
@@ -388,12 +469,16 @@ export default function RoutePlannerDashboard() {
                 disabled={isLoadingLocation}
                 className="mt-1 rounded-md border border-eco-green bg-eco-green px-3 py-1 text-xs text-white transition hover:bg-eco-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoadingLocation ? 'Getting location...' : 'Use Current Location'}
+                {isLoadingLocation
+                  ? "Getting location..."
+                  : "Use Current Location"}
               </button>
             </label>
 
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Destination</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">
+                Destination
+              </span>
               <select
                 value={destinationCountry}
                 onChange={(event) => setDestinationCountry(event.target.value)}
@@ -423,10 +508,14 @@ export default function RoutePlannerDashboard() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Cabin / travel class</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">
+                Cabin / travel class
+              </span>
               <select
                 value={cabinClass}
-                onChange={(event) => setCabinClass(event.target.value as CabinClass)}
+                onChange={(event) =>
+                  setCabinClass(event.target.value as CabinClass)
+                }
                 className="rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
               >
                 {cabinClasses.map((item) => (
@@ -438,10 +527,14 @@ export default function RoutePlannerDashboard() {
             </label>
 
             <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">Route strategy</span>
+              <span className="text-xs font-medium uppercase tracking-wider text-eco-muted">
+                Route strategy
+              </span>
               <select
                 value={strategy}
-                onChange={(event) => setStrategy(event.target.value as RouteStrategy)}
+                onChange={(event) =>
+                  setStrategy(event.target.value as RouteStrategy)
+                }
                 className="rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
               >
                 {strategies.map((item) => (
@@ -456,8 +549,12 @@ export default function RoutePlannerDashboard() {
           <div className="grid gap-3 rounded-lg border border-eco-border bg-eco-panel p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Travelers</p>
-                <h3 className="text-sm font-semibold text-eco-text">Number of travelers</h3>
+                <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">
+                  Travelers
+                </p>
+                <h3 className="text-sm font-semibold text-eco-text">
+                  Number of travelers
+                </h3>
               </div>
               <span className="rounded-full border border-eco-border px-3 py-1 text-xs text-eco-muted">
                 Scales emissions totals
@@ -476,8 +573,8 @@ export default function RoutePlannerDashboard() {
           <button
             type="button"
             onClick={() => {
-              saveHistoryOnNextPlan.current = true
-              void planJourney()
+              saveHistoryOnNextPlan.current = true;
+              void planJourney();
             }}
             className="rounded-md bg-eco-green px-4 py-2 text-sm font-semibold text-eco-bg transition hover:opacity-90"
           >
@@ -488,8 +585,8 @@ export default function RoutePlannerDashboard() {
             <button
               type="button"
               onClick={() => {
-                const origin = getCityById(originId)
-                const destination = getCityById(destinationId)
+                const origin = getCityById(originId);
+                const destination = getCityById(destinationId);
                 if (origin && destination) {
                   void saveFavorite({
                     originCity: origin.name,
@@ -498,7 +595,7 @@ export default function RoutePlannerDashboard() {
                     destinationCountry: destinationCountry,
                     cabinClass: cabinClass,
                     routeStrategy: strategy,
-                  })
+                  });
                 }
               }}
               className="rounded-md border border-eco-border px-4 py-2 text-sm font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
@@ -511,9 +608,11 @@ export default function RoutePlannerDashboard() {
         <section className="grid gap-3 rounded-xl border border-eco-border bg-eco-bg p-4">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Summary</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">
+                Summary
+              </p>
               <h2 className="text-lg font-semibold text-eco-text">
-                {activeRoute?.label ?? 'No route selected'}
+                {activeRoute?.label ?? "No route selected"}
               </h2>
             </div>
             {bestOption ? (
@@ -526,52 +625,80 @@ export default function RoutePlannerDashboard() {
           {activeRoute ? (
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
-                <p className="text-xs uppercase tracking-wider text-eco-muted">CO₂</p>
-                <p className="mt-1 text-xl font-semibold text-eco-text">{activeRoute.totalCo2Kg.toFixed(0)} kg</p>
+                <p className="text-xs uppercase tracking-wider text-eco-muted">
+                  CO₂
+                </p>
+                <p className="mt-1 text-xl font-semibold text-eco-text">
+                  {activeRoute.totalCo2Kg.toFixed(0)} kg
+                </p>
               </div>
               <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
-                <p className="text-xs uppercase tracking-wider text-eco-muted">Savings vs direct flight</p>
-                <p className={`mt-1 text-xl font-semibold ${activeRoute.savingsVsDirectFlightKg >= 0 ? 'text-eco-green' : 'text-orange-300'}`}>
+                <p className="text-xs uppercase tracking-wider text-eco-muted">
+                  Savings vs direct flight
+                </p>
+                <p
+                  className={`mt-1 text-xl font-semibold ${activeRoute.savingsVsDirectFlightKg >= 0 ? "text-eco-green" : "text-orange-300"}`}
+                >
                   {formatDeltaKg(activeRoute.savingsVsDirectFlightKg)}
                 </p>
               </div>
               <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
-                <p className="text-xs uppercase tracking-wider text-eco-muted">Distance</p>
-                <p className="mt-1 text-xl font-semibold text-eco-text">{formatDistance(activeRoute.totalDistanceKm)}</p>
+                <p className="text-xs uppercase tracking-wider text-eco-muted">
+                  Distance
+                </p>
+                <p className="mt-1 text-xl font-semibold text-eco-text">
+                  {formatDistance(activeRoute.totalDistanceKm)}
+                </p>
               </div>
               <div className="rounded-lg border border-eco-border bg-eco-panel p-3">
-                <p className="text-xs uppercase tracking-wider text-eco-muted">Time</p>
-                <p className="mt-1 text-xl font-semibold text-eco-text">{formatTime(activeRoute.totalTravelTimeMinutes)}</p>
+                <p className="text-xs uppercase tracking-wider text-eco-muted">
+                  Time
+                </p>
+                <p className="mt-1 text-xl font-semibold text-eco-text">
+                  {formatTime(activeRoute.totalTravelTimeMinutes)}
+                </p>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-eco-muted">Generate a route to see totals and comparisons.</p>
+            <p className="text-sm text-eco-muted">
+              Generate a route to see totals and comparisons.
+            </p>
           )}
         </section>
 
         <section className="grid gap-3 rounded-xl border border-eco-border bg-eco-bg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Comparison</p>
-              <h2 className="text-lg font-semibold text-eco-text">Alternative travel options</h2>
+              <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">
+                Comparison
+              </p>
+              <h2 className="text-lg font-semibold text-eco-text">
+                Alternative travel options
+              </h2>
             </div>
-            <p className="text-xs text-eco-muted">Click a card to edit that route</p>
+            <p className="text-xs text-eco-muted">
+              Click a card to edit that route
+            </p>
           </div>
 
           <div className="grid gap-2">
             {options.map((option) => {
-              const selected = selectedOptionId === option.id
+              const selected = selectedOptionId === option.id;
               return (
                 <button
                   key={option.id}
                   type="button"
                   onClick={() => handleSelectOption(option)}
-                  className={`rounded-lg border p-3 text-left transition ${selected ? 'border-eco-green bg-eco-green/10' : 'border-eco-border bg-eco-panel hover:border-eco-green/50'}`}
+                  className={`rounded-lg border p-3 text-left transition ${selected ? "border-eco-green bg-eco-green/10" : "border-eco-border bg-eco-panel hover:border-eco-green/50"}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-eco-text">{option.label}</p>
-                      <p className="text-xs text-eco-muted">{option.description}</p>
+                      <p className="font-semibold text-eco-text">
+                        {option.label}
+                      </p>
+                      <p className="text-xs text-eco-muted">
+                        {option.description}
+                      </p>
                     </div>
                     {option.isBest ? (
                       <span className="rounded-full bg-eco-green px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-eco-bg">
@@ -585,32 +712,44 @@ export default function RoutePlannerDashboard() {
                     <span>{option.totalCo2Kg.toFixed(0)} kg CO₂</span>
                   </div>
                   <div className="mt-2 text-xs text-eco-muted">
-                    {formatDeltaKg(option.savingsVsDirectFlightKg)} vs direct flight
+                    {formatDeltaKg(option.savingsVsDirectFlightKg)} vs direct
+                    flight
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
         </section>
 
         <section className="grid gap-3 rounded-xl border border-eco-border bg-eco-bg p-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">Trip segments</p>
-            <h2 className="text-lg font-semibold text-eco-text">Edit the active journey</h2>
+            <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">
+              Trip segments
+            </p>
+            <h2 className="text-lg font-semibold text-eco-text">
+              Edit the active journey
+            </h2>
           </div>
 
           {activeRoute ? (
             <div className="grid gap-3">
               {activeRoute.segments.map((segment, index) => (
-                <div key={segment.id} className="rounded-lg border border-eco-border bg-eco-panel p-3">
+                <div
+                  key={segment.id}
+                  className="rounded-lg border border-eco-border bg-eco-panel p-3"
+                >
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <span className="text-lg" aria-hidden="true">
                         {segment.icon}
                       </span>
                       <div>
-                        <p className="font-semibold text-eco-text">{segment.transportLabel}</p>
-                        <p className="text-xs text-eco-muted">Segment {index + 1}</p>
+                        <p className="font-semibold text-eco-text">
+                          {segment.transportLabel}
+                        </p>
+                        <p className="text-xs text-eco-muted">
+                          Segment {index + 1}
+                        </p>
                       </div>
                     </div>
 
@@ -632,7 +771,9 @@ export default function RoutePlannerDashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-eco-muted">Generate a route first to edit its segments.</p>
+            <p className="text-sm text-eco-muted">
+              Generate a route first to edit its segments.
+            </p>
           )}
         </section>
       </aside>
@@ -658,5 +799,5 @@ export default function RoutePlannerDashboard() {
         </button>
       )}
     </div>
-  )
+  );
 }

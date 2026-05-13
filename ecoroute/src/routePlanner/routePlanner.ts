@@ -1,5 +1,6 @@
-import { cities } from '../data/cities'
+import { cities } from '../data/cities_clean'
 import type { City } from '../types'
+import { findTransferRoute } from './transferMatcher'
 import type {
   RouteOption,
   RoutePlanResult,
@@ -11,6 +12,15 @@ import type {
   RouteTransportKind,
 } from './types'
 import { createDefaultRouteTransportCatalog } from './transport'
+
+const cityByIata = new Map<string, City>()
+
+for (const city of cities) {
+  const iata = city.iata.trim().toUpperCase()
+  if (!cityByIata.has(iata)) {
+    cityByIata.set(iata, city)
+  }
+}
 
 function makeRouteId(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`
@@ -63,6 +73,32 @@ function buildSegments(
   steps: Array<{ transportKind: RouteTransportKind; from: City; to: City; cabinClass: RouteRequest['cabinClass'] }>,
 ): RouteSegment[] {
   return steps.flatMap((step) => {
+    if (step.transportKind === 'flight') {
+      const transferRoute = findTransferRoute(
+        step.from.iata.trim().toUpperCase(),
+        step.to.iata.trim().toUpperCase(),
+      )
+
+      if (transferRoute && transferRoute.length > 1) {
+        const transferCities = transferRoute
+          .map((iata) => cityByIata.get(iata))
+          .filter((city): city is City => Boolean(city))
+
+        if (transferCities.length === transferRoute.length) {
+          const flightTransport = catalog.get('flight')
+          if (!flightTransport) return []
+
+          return transferCities.slice(0, -1).map((fromCity, index) =>
+            flightTransport.estimate({
+              from: fromCity,
+              to: transferCities[index + 1],
+              cabinClass: step.cabinClass,
+            }),
+          )
+        }
+      }
+    }
+
     const transport = catalog.get(step.transportKind)
     if (!transport) {
       return []
@@ -97,18 +133,23 @@ function createOption(
 function buildDirectFlightOption(request: RouteRequest, catalog: RouteTransportCatalog) {
   if (!request.origin || !request.destination) return null
 
+  const segments = buildSegments(catalog, [
+    {
+      transportKind: 'flight',
+      from: request.origin,
+      to: request.destination,
+      cabinClass: request.cabinClass,
+    },
+  ])
+  const hasTransfers = segments.length > 1
+
   return createOption(
     'direct-flight',
-    'Direct flight',
-    'Fastest point-to-point air route for comparison.',
-    buildSegments(catalog, [
-      {
-        transportKind: 'flight',
-        from: request.origin,
-        to: request.destination,
-        cabinClass: request.cabinClass,
-      },
-    ]),
+    hasTransfers ? 'Flight with transfers' : 'Direct flight',
+    hasTransfers
+      ? 'A connected flight path with transfer airports based on available routes.'
+      : 'Fastest point-to-point air route for comparison.',
+    segments,
   )
 }
 

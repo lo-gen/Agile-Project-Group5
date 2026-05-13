@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cities } from '../../data/cities'
+import { cities } from '../../data/cities_clean'
 import { fetchOsrmRoadRoute } from '../roadRouting'
 
 const london = cities.find((city) => city.id === 'lhr')!
