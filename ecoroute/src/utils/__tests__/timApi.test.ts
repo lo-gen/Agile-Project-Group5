@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { getTypicalEmissions } from '../timApi'
 
 const sampleMarkets = [
-  { origin: 'NAN', destination: 'BOS' },
+  { origin: 'GOT', destination: 'ARN' },
   { origin: 'BOS', destination: 'NAN' },
 ]
 
