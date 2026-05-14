@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react'
 import type { FlightState, FlightAction, City, CabinClass, SavedFlight } from '../types'
 import { getTypicalEmissions } from '../utils/timApi'
-import { buildFlightEmissionsResultFromApi, getApiEmissionsGrams } from '../utils/emissions'
+import { buildFlightEmissionsResultFromApi, getApiEmissionsGrams, calculateFlightEmissions } from '../utils/emissions'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './AuthContext'
 
@@ -192,10 +192,10 @@ export function FlightProvider({ children }: { children: ReactNode }) {
 
         if (!active) return
         dispatch({ type: 'SET_EMISSIONS_RESULT', payload: result })
-      } catch (error) {
+      } catch {
         if (!active) return
-        const message = error instanceof Error ? error.message : String(error)
-        dispatch({ type: 'SET_EMISSIONS_ERROR', payload: message })
+        const fallback = calculateFlightEmissions(origin, destination, requestCabinClass, requestGroupSize)
+        dispatch({ type: 'SET_EMISSIONS_RESULT', payload: { ...fallback, isEstimate: true } })
       } finally {
         if (active) {
           dispatch({ type: 'SET_EMISSIONS_LOADING', payload: false })

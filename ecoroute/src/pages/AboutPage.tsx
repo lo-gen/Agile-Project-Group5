@@ -10,43 +10,71 @@ export default function AboutPage() {
             About EcoRoute
           </h1>
           <p className="mt-4 text-sm leading-6 text-eco-muted">
-            EcoRoute is a student project designed to make flight emissions visible and comparable. We believe that informed choices drive change—knowing the environmental impact of your travel helps you make decisions aligned with your values.
+            EcoRoute is a student project designed to make travel emissions visible
+            and comparable. We believe informed choices drive change — knowing the
+            environmental impact of your journey helps you make decisions aligned
+            with your values.
           </p>
 
           <h2 className="mt-8 text-xl font-semibold">Our mission</h2>
           <p className="mt-3 text-sm leading-6 text-eco-muted">
-            We're working toward UN Sustainable Development Goal 13 (Climate Action) by providing accessible, accurate emissions data for air travel across Europe. Every calculation is grounded in the ICAO Carbon Emissions Calculator methodology.
+            We're working toward UN Sustainable Development Goal 13 (Climate
+            Action) by providing accessible, accurate emissions data for air and
+            ground travel. Rather than estimate emissions ourselves, we rely on
+            authoritative external data sources so the numbers you see are as
+            reliable as possible.
           </p>
 
           <h2 className="mt-8 text-xl font-semibold">How it works</h2>
           <div className="mt-4 space-y-3 text-sm text-eco-muted">
             <p>
-              <span className="font-semibold text-eco-text">Great-circle distance</span> is calculated between airports using the Haversine formula, with a 95 km detour factor added to account for real-world routing.
+              <span className="font-semibold text-eco-text">
+                Flight emissions — Google Travel Impact Model (TIM)
+              </span>{" "}
+              All flight CO₂ figures come from Google's Travel Impact Model API.
+              TIM is an open-source model that uses real aircraft types, seat
+              configurations, load factors, and routing data to estimate
+              per-passenger emissions by cabin class. It also reports a{" "}
+              <span className="font-semibold text-eco-text">
+                contrails impact bucket
+              </span>{" "}
+              (Low / Moderate / High) to indicate the non-CO₂ warming contribution
+              of a specific flight.
             </p>
             <p>
-              <span className="font-semibold text-eco-text">Emission factors</span> differ by haul type—short-haul flights (&lt;1,500 km) emit 0.255 kg CO₂ per km per passenger, while long-haul flights emit 0.195 kg CO₂ per km per passenger.
+              <span className="font-semibold text-eco-text">
+                Flight route distance
+              </span>{" "}
+              is calculated locally using the Haversine formula between airports,
+              with a 95 km detour factor added for real-world routing. This is used
+              for display purposes only — the emissions figure itself comes from TIM.
             </p>
             <p>
-              <span className="font-semibold text-eco-text">Cabin class</span> multipliers reflect floor-space allocation: Economy (1.0×), Business (1.5×), and First Class (2.0×).
+              <span className="font-semibold text-eco-text">Car route distance</span>{" "}
+              is fetched from the{" "}
+              <span className="font-semibold text-eco-text">OSRM API</span>{" "}
+              (Open Source Routing Machine), which returns the actual road distance
+              and driving time between two cities. Emissions are then calculated by
+              applying a factor of 0.21 kg CO₂ per km, based on a typical European
+              passenger car.
             </p>
             <p>
-              <span className="font-semibold text-eco-text">Radiative Forcing Index (RFI)</span> is multiplied by 2.7 to account for non-CO₂ warming effects of aviation at altitude, including contrails and nitrogen oxides.
+              <span className="font-semibold text-eco-text">Train comparison</span>{" "}
+              uses the straight-line distance between cities with an emission factor
+              of 0.041 kg CO₂ per km, reflecting average European rail emissions
+              including the electricity grid mix.
             </p>
           </div>
 
           <h2 className="mt-8 text-xl font-semibold">Compare your options</h2>
           <p className="mt-3 text-sm leading-6 text-eco-muted">
-            EcoRoute lets you compare the emissions of flights with alternative transport modes like train or car travel. Use this tool to understand the true climate cost of your journey and discover lower-impact alternatives.
+            EcoRoute lets you compare the emissions of a flight with car and train
+            alternatives side by side. Use the planner to understand the true
+            climate cost of your journey and discover lower-impact ways to travel.
           </p>
 
-          <a
-            href="#/"
-            className="mt-8 inline-flex rounded-md border border-eco-border px-4 py-2 text-sm font-medium transition hover:border-eco-green hover:text-eco-green"
-          >
-            Back to emissions calculator
-          </a>
         </section>
       </div>
     </div>
-  )
+  );
 }

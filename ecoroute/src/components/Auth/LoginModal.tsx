@@ -1,20 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../context/AuthContext'
 
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
+  initialTab?: 'login' | 'signup'
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [tab, setTab] = useState<'login' | 'signup'>('login')
+export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: LoginModalProps) {
+  const [tab, setTab] = useState<'login' | 'signup'>(initialTab)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { login, signup } = useAuth()
+
+  useEffect(() => {
+    if (isOpen) setTab(initialTab)
+  }, [isOpen, initialTab])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
