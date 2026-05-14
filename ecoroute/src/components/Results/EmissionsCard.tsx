@@ -46,14 +46,6 @@ export default function EmissionsCard() {
     )
   }
 
-  if (state.emissionError) {
-    return (
-      <div className="bg-eco-panel border border-eco-border rounded-lg p-4 text-sm text-red-400">
-        Failed to load emissions: {state.emissionError}
-      </div>
-    )
-  }
-
   if (!state.result) return null
 
   const {
@@ -63,11 +55,17 @@ export default function EmissionsCard() {
     distanceKm,
     equivalentKmByCar,
     treesNeededToOffset,
+    isEstimate,
   } = state.result
   const estimatedFlightDuration = formatHoursAndMinutes(estimateAirborneHours(distanceKm))
 
   return (
     <div className="bg-eco-panel border border-eco-border rounded-lg p-4 flex flex-col gap-3">
+      {isEstimate && (
+        <p className="text-xs text-amber-400 border border-amber-400/30 bg-amber-400/10 rounded px-2 py-1">
+          Live data unavailable — showing estimate based on standard emission factors
+        </p>
+      )}
       <div>
         <p className="text-xs text-eco-muted uppercase tracking-wider mb-1">
           CO₂ emissions

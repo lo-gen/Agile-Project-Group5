@@ -63,7 +63,7 @@ export default function FlightArc({ origin, destination }: Props) {
       <Polyline
         ref={polylineRef}
         positions={points}
-        pathOptions={{ color: COLOR_ARC, weight: ARC_STROKE_WEIGHT, opacity: ARC_STROKE_OPACITY }}
+        pathOptions={{ color: COLOR_ARC, weight: ARC_STROKE_WEIGHT, opacity: ARC_STROKE_OPACITY, dashArray: '10 8' }}
       />
       {showPlane && (
         <Marker position={midPoint} icon={planeIcon} />

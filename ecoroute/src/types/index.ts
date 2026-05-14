@@ -23,6 +23,7 @@ export interface EmissionsResult {
   equivalentKmByCar: number;
   equivalentKmByTrain: number;
   treesNeededToOffset: number;
+  isEstimate?: boolean;
 }
 
 export interface FlightState {

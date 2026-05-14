@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cities } from '../data/cities_clean'
 import { useFlightContext } from '../context/FlightContext'
 import { useAuth } from '../context/AuthContext'
 import { haversineDistanceKm } from '../utils/distance'
 import { useFavorites } from '../hooks/useFavorites'
+import { createDefaultRoutePlanner } from '../routePlanner'
 import CitySelector from './Controls/CitySelector'
 import TravelClassSelector from './Controls/TravelClassSelector'
 import EmissionsCard from './Results/EmissionsCard'
 import ComparisonBar from './Results/ComparisonBar'
+import FlightLegsCard from './Results/FlightLegsCard'
 import FlightMap from './Map/FlightMap'
 
 function getNearestCity(userLat: number, userLng: number) {
@@ -37,6 +39,18 @@ export default function RoutePlannerDashboard() {
   const [statusMessage, setStatusMessage] = useState('')
   const [isMapVisible, setIsMapVisible] = useState(true)
   const [sidebarPct, setSidebarPct] = useState(38)
+  const planner = useMemo(() => createDefaultRoutePlanner(), [])
+
+  const flightSegments = useMemo(() => {
+    if (!state.origin || !state.destination) return null
+    const result = planner.buildOptions({
+      origin: state.origin,
+      destination: state.destination,
+      cabinClass: state.cabinClass,
+      strategy: 'direct-flight',
+    })
+    return result.options.find((o) => o.strategy === 'direct-flight')?.segments ?? null
+  }, [state.origin, state.destination, state.cabinClass, planner])
 
   const containerRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
@@ -228,6 +242,7 @@ export default function RoutePlannerDashboard() {
         )}
 
         <EmissionsCard />
+        {flightSegments && <FlightLegsCard segments={flightSegments} />}
         <ComparisonBar />
       </aside>
 
@@ -238,7 +253,7 @@ export default function RoutePlannerDashboard() {
             onMouseDown={() => { isDragging.current = true }}
           />
           <main className="h-full min-w-0 flex-1">
-            <FlightMap />
+            <FlightMap segments={flightSegments} />
           </main>
         </>
       )}
