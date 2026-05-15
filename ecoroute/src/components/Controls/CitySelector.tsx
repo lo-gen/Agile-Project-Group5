@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { cities } from '../../data/cities_clean'
 import { useFlightContext } from '../../context/FlightContext'
 import type { City } from '../../types'
-import { filterCities, getCityCountries } from '../../utils/cityFilters'
+import { filterCities } from '../../utils/cityFilters'
 
 function CityDropdown({
   label,
@@ -15,47 +15,76 @@ function CityDropdown({
   exclude: City | null
   onChange: (city: City | null) => void
 }) {
-  const [country, setCountry] = useState('')
+  const selectedLabel = value ? `${value.name}, ${value.country}` : ''
+  const [query, setQuery] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
 
-  const countries = useMemo(() => getCityCountries(cities), [])
+  const inputValue = isSearching ? query : selectedLabel
+  const showSuggestions = isSearching && query.trim().length > 0
+
   const available = useMemo(
-    () => filterCities(cities, { query: '', country, excludeId: exclude?.id }),
-    [country, exclude?.id],
+    () => filterCities(cities, { query: showSuggestions ? query : '', excludeId: exclude?.id }),
+    [showSuggestions, query, exclude?.id],
   )
 
+  const visibleCities = showSuggestions ? available.slice(0, 50) : []
+
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <label className="text-xs font-medium text-eco-muted uppercase tracking-wider">
         {label}
       </label>
-      <select
+      <input
+        type="search"
         className="w-full rounded-md border border-eco-border bg-eco-bg px-3 py-2 text-sm text-eco-text focus:outline-none focus:ring-1 focus:ring-eco-green"
-        value={country}
-        onChange={(event) => setCountry(event.target.value)}
-        aria-label={`${label} country filter`}
-      >
-        <option value="">All countries</option>
-        {countries.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
-      <select
-        className="w-full bg-eco-bg border border-eco-border text-eco-text rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-eco-green"
-        value={value?.id ?? ''}
-        onChange={(e) => {
-          const selected = cities.find((c) => c.id === e.target.value) ?? null
-          onChange(selected)
+        placeholder="Search country, city, or airport code…"
+        value={inputValue}
+        onChange={(event) => {
+          setQuery(event.target.value)
+          setIsSearching(true)
         }}
-      >
-        <option value="">Select city…</option>
-        {available.map((city) => (
-          <option key={city.id} value={city.id}>
-            {city.name}, {city.country} ({city.iata})
-          </option>
-        ))}
-      </select>
+        aria-label={`${label} city and country search`}
+        autoComplete="off"
+      />
+      {showSuggestions ? (
+        <div className="relative">
+          <div className="mt-1 rounded-md border border-eco-border bg-eco-bg shadow-sm">
+            {visibleCities.length > 0 ? (
+              <>
+                <ul
+                  role="listbox"
+                  className="max-h-72 overflow-y-auto text-sm"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {visibleCities.map((city) => (
+                    <li
+                      key={city.id}
+                      role="option"
+                      className="cursor-pointer px-3 py-2 text-eco-text hover:bg-eco-hover"
+                      onClick={() => {
+                        onChange(city)
+                        setQuery(city.name)
+                        setIsSearching(false)
+                      }}
+                    >
+                      {city.name}, {city.country} ({city.iata})
+                    </li>
+                  ))}
+                </ul>
+                {available.length > 50 ? (
+                  <div className="px-3 py-2 text-xs text-eco-muted">
+                    Showing top 50 results. Narrow your search for more specific choices.
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div className="p-3 text-sm text-eco-muted">
+                No matching cities found.
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
