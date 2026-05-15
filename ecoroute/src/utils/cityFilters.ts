@@ -10,7 +10,7 @@ export function filterCities(
   cities: City[],
   options: {
     query: string
-    country: string
+    country?: string
     excludeId?: string | null
   },
 ) {
