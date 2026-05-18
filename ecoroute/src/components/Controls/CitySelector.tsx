@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { cities } from '../../data/cities_clean'
 import { useFlightContext } from '../../context/FlightContext'
+import { useLanguage } from '../../context/LanguageContext'
 import type { City } from '../../types'
 import { filterCities } from '../../utils/cityFilters'
 
@@ -15,6 +16,7 @@ function CityDropdown({
   exclude: City | null
   onChange: (city: City | null) => void
 }) {
+  const { t } = useLanguage()
   const selectedLabel = value ? `${value.name}, ${value.country}` : ''
   const [query, setQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
@@ -37,13 +39,13 @@ function CityDropdown({
       <input
         type="search"
         className="w-full rounded-md border border-eco-border bg-eco-bg px-3 py-2 text-sm text-eco-text focus:outline-none focus:ring-1 focus:ring-eco-green"
-        placeholder="Search country, city, or airport code…"
+        placeholder={t('citySearchPlaceholder')}
         value={inputValue}
         onChange={(event) => {
           setQuery(event.target.value)
           setIsSearching(true)
         }}
-        aria-label={`${label} city and country search`}
+        aria-label={t('citySearchAria', { label })}
         autoComplete="off"
       />
       {showSuggestions ? (
@@ -73,13 +75,13 @@ function CityDropdown({
                 </ul>
                 {available.length > 50 ? (
                   <div className="px-3 py-2 text-xs text-eco-muted">
-                    Showing top 50 results. Narrow your search for more specific choices.
+                    {t('cityTopResults')}
                   </div>
                 ) : null}
               </>
             ) : (
               <div className="p-3 text-sm text-eco-muted">
-                No matching cities found.
+                {t('cityNoMatches')}
               </div>
             )}
           </div>
@@ -91,17 +93,18 @@ function CityDropdown({
 
 export default function CitySelector() {
   const { state, setOrigin, setDestination } = useFlightContext()
+  const { t } = useLanguage()
 
   return (
     <div className="flex flex-col gap-3">
       <CityDropdown
-        label="From"
+        label={t('cityFrom')}
         value={state.origin}
         exclude={state.destination}
         onChange={setOrigin}
       />
       <CityDropdown
-        label="To"
+        label={t('cityTo')}
         value={state.destination}
         exclude={state.origin}
         onChange={setDestination}

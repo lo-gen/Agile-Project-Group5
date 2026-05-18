@@ -1,4 +1,5 @@
 import type { RouteSegment } from '../../routePlanner'
+import { useLanguage } from '../../context/LanguageContext'
 
 
 interface Props {
@@ -7,11 +8,12 @@ interface Props {
 
 export default function FlightLegsCard({ segments }: Props) {
   const isDirect = segments.length === 1
+  const { t } = useLanguage()
 
   return (
     <div className="bg-eco-panel border border-eco-border rounded-lg p-4 flex flex-col gap-3">
       <p className="text-xs text-eco-muted uppercase tracking-wider">
-        {isDirect ? 'Direct flight' : `Flight route · ${segments.length} legs`}
+        {isDirect ? t('legsDirectFlight') : t('legsFlightRoute', { count: segments.length })}
       </p>
       <div className="flex flex-col gap-2">
         {segments.map((seg, idx) => (

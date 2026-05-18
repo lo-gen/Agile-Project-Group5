@@ -1,15 +1,17 @@
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { useFlightHistory } from '../hooks/useFlightHistory'
 import { supabase } from '../lib/supabase'
 
 export default function AccountPage() {
   const { user } = useAuth()
   const { flightHistory, isLoading, reloadHistory } = useFlightHistory()
+  const { language, t } = useLanguage()
 
   if (!user) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-eco-muted">You must be logged in to view your history.</p>
+        <p className="text-eco-muted">{t('accountLoggedOut')}</p>
       </div>
     )
   }
@@ -28,35 +30,35 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">Account</p>
-        <h1 className="text-3xl font-semibold text-eco-text">My history</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">{t('accountLabel')}</p>
+        <h1 className="text-3xl font-semibold text-eco-text">{t('accountTitle')}</h1>
         <p className="mt-1 text-sm text-eco-muted">{user.email}</p>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-eco-muted">Loading history…</p>
+        <p className="text-sm text-eco-muted">{t('accountLoading')}</p>
       ) : !flightHistory || flightHistory.length === 0 ? (
         <div className="rounded-xl border border-eco-border bg-eco-panel p-8 text-center">
-          <p className="text-eco-muted">No history yet.</p>
+          <p className="text-eco-muted">{t('accountNoHistory')}</p>
           <p className="mt-1 text-xs text-eco-muted">
-            Plan a journey on the home page and it will be saved here automatically.
+            {t('accountNoHistoryHint')}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-eco-muted">{flightHistory.length} saved trips</p>
+            <p className="text-sm text-eco-muted">{t('accountSavedTrips', { count: flightHistory.length })}</p>
             <button
               onClick={() => void handleClearAll()}
               className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50"
             >
-              Clear all
+              {t('accountClearAll')}
             </button>
           </div>
 
           <div className="divide-y divide-eco-border rounded-xl border border-eco-border bg-eco-panel overflow-hidden">
             {flightHistory.map((flight) => {
-              const date = new Date(flight.created_at).toLocaleDateString('en-GB', {
+              const date = new Date(flight.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-GB', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -74,7 +76,7 @@ export default function AccountPage() {
                   <button
                     onClick={() => void handleDelete(flight.id)}
                     className="ml-4 text-eco-muted transition hover:text-red-500"
-                    aria-label="Remove"
+                    aria-label={t('accountRemove')}
                   >
                     ✕
                   </button>

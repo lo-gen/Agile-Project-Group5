@@ -4,13 +4,16 @@ import './index.css'
 import App from './App'
 import { FlightProvider } from './context/FlightContext'
 import { AuthProvider } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <FlightProvider>
-        <App />
-      </FlightProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <FlightProvider>
+          <App />
+        </FlightProvider>
+      </AuthProvider>
+    </LanguageProvider>
   </StrictMode>,
 )

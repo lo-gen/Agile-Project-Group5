@@ -11,6 +11,7 @@ import EmissionsCard from './Results/EmissionsCard'
 import ComparisonBar from './Results/ComparisonBar'
 import FlightLegsCard from './Results/FlightLegsCard'
 import FlightMap from './Map/FlightMap'
+import { useLanguage } from '../context/LanguageContext'
 
 function getNearestCity(userLat: number, userLng: number) {
   let nearestCity = cities[0]
@@ -35,6 +36,7 @@ export default function RoutePlannerDashboard() {
   const { state, setOrigin, setDestination, setCabinClass, saveFlightToHistory } = useFlightContext()
   const { user } = useAuth()
   const { favorites, saveFavorite, deleteFavorite } = useFavorites()
+  const { t } = useLanguage()
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [isMapVisible, setIsMapVisible] = useState(true)
@@ -73,34 +75,34 @@ export default function RoutePlannerDashboard() {
 
   const handleUseCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setStatusMessage('Geolocation is not supported by this browser.')
+      setStatusMessage(t('plannerGeoUnsupported'))
       return
     }
     setIsLoadingLocation(true)
-    setStatusMessage('Getting your current location...')
+    setStatusMessage(t('plannerGeoLoading'))
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords
         const nearestCity = getNearestCity(latitude, longitude)
         setOrigin(nearestCity)
-        setStatusMessage(`Using your current location: ${nearestCity.name}, ${nearestCity.country}`)
+        setStatusMessage(t('plannerGeoUsingLocation', { city: nearestCity.name, country: nearestCity.country }))
         setIsLoadingLocation(false)
       },
       (error) => {
-        let errorMessage = 'Unable to get your location.'
+        let errorMessage = t('plannerGeoError')
         if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = 'Location access denied. Please allow location access to use this feature.'
+          errorMessage = t('plannerGeoDenied')
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = 'Location information is unavailable.'
+          errorMessage = t('plannerGeoUnavailable')
         } else if (error.code === error.TIMEOUT) {
-          errorMessage = 'Location request timed out.'
+          errorMessage = t('plannerGeoTimeout')
         }
         setStatusMessage(errorMessage)
         setIsLoadingLocation(false)
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 },
     )
-  }, [setOrigin])
+  }, [setOrigin, t])
 
   const handleSaveToHistory = useCallback(async () => {
     if (!state.origin || !state.destination || !state.result) return
@@ -111,8 +113,8 @@ export default function RoutePlannerDashboard() {
       state.result.totalCo2Kg,
       state.result.distanceKm,
     )
-    setStatusMessage('Flight saved to history.')
-  }, [state, saveFlightToHistory])
+    setStatusMessage(t('plannerSavedHistory'))
+  }, [state, saveFlightToHistory, t])
 
   const handleSaveFavorite = useCallback(async () => {
     if (!state.origin || !state.destination) return
@@ -124,8 +126,8 @@ export default function RoutePlannerDashboard() {
       cabinClass: state.cabinClass,
       routeStrategy: 'direct-flight',
     })
-    setStatusMessage('Saved as favorite.')
-  }, [state, saveFavorite])
+    setStatusMessage(t('plannerSavedFavorite'))
+  }, [state, saveFavorite, t])
 
   return (
     <div
@@ -140,10 +142,10 @@ export default function RoutePlannerDashboard() {
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.25em] text-eco-green">
-                EcoRoute Planner
+                {t('plannerLabel')}
               </p>
               <h1 className="text-3xl font-semibold text-eco-text">
-                Flight emissions planner
+                {t('plannerTitle')}
               </h1>
             </div>
             <button
@@ -151,7 +153,7 @@ export default function RoutePlannerDashboard() {
               onClick={() => setIsMapVisible((v) => !v)}
               className="mt-1 shrink-0 rounded-md border border-eco-border px-3 py-1.5 text-xs font-semibold text-eco-text transition hover:border-eco-green hover:text-eco-green"
             >
-              {isMapVisible ? 'Hide map' : 'Show map'}
+              {isMapVisible ? t('plannerHideMap') : t('plannerShowMap')}
             </button>
           </div>
           {statusMessage && (
@@ -164,7 +166,7 @@ export default function RoutePlannerDashboard() {
         {user && favorites.length > 0 && (
           <section className="grid gap-2 rounded-xl border border-eco-border bg-eco-bg p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-eco-muted">
-              Favorites
+              {t('plannerFavorites')}
             </p>
             {favorites.map((fav) => (
               <div
@@ -189,7 +191,7 @@ export default function RoutePlannerDashboard() {
                     }}
                     className="rounded border border-eco-border px-2 py-0.5 text-xs text-eco-text transition hover:border-eco-green hover:text-eco-green"
                   >
-                    Load
+                    {t('plannerLoad')}
                   </button>
                   <button
                     type="button"
@@ -212,7 +214,7 @@ export default function RoutePlannerDashboard() {
             disabled={isLoadingLocation}
             className="rounded-md border border-eco-green bg-eco-green px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-eco-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoadingLocation ? 'Getting location...' : 'Use Current Location'}
+            {isLoadingLocation ? t('plannerUseCurrentLocationLoading') : t('plannerUseCurrentLocation')}
           </button>
         </section>
 
@@ -228,7 +230,7 @@ export default function RoutePlannerDashboard() {
                 onClick={() => void handleSaveToHistory()}
                 className="flex-1 rounded-md bg-eco-green px-4 py-2 text-sm font-semibold text-eco-bg transition hover:opacity-90"
               >
-                Save to history
+                {t('plannerSaveToHistory')}
               </button>
             )}
             <button
@@ -236,7 +238,7 @@ export default function RoutePlannerDashboard() {
               onClick={() => void handleSaveFavorite()}
               className="flex-1 rounded-md border border-eco-border px-4 py-2 text-sm font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
             >
-              Save as favorite
+              {t('plannerSaveAsFavorite')}
             </button>
           </div>
         )}

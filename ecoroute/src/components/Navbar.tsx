@@ -1,17 +1,12 @@
 import { useState } from "react";
 import AuthButton from "./Auth/AuthButton";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 
 interface NavbarProps {
   route: string;
   onLoginClick: () => void;
 }
-
-const BASE_LINKS = [
-  { label: "Home", href: "#/" },
-  { label: "Planner", href: "#/planner" },
-  { label: "About", href: "#/about" },
-];
 
 function isActive(href: string, route: string) {
   const linkRoute = (href.startsWith("#") ? href.slice(1) : href) || "/";
@@ -21,10 +16,13 @@ function isActive(href: string, route: string) {
 export default function Navbar({ route, onLoginClick }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
+  const { language, languageLabel, supportedLanguages, setLanguage, t } = useLanguage();
 
   const links = [
-    ...BASE_LINKS,
-    ...(user ? [{ label: "My History", href: "#/account" }] : []),
+    { label: t('navbarHome'), href: "#/" },
+    { label: t('navbarPlanner'), href: "#/planner" },
+    { label: t('navbarAbout'), href: "#/about" },
+    ...(user ? [{ label: t('navbarHistory'), href: "#/account" }] : []),
   ];
 
   return (
@@ -55,11 +53,26 @@ export default function Navbar({ route, onLoginClick }: NavbarProps) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 rounded-md border border-eco-border bg-eco-panel px-2 py-1.5 text-xs font-medium text-eco-text">
+            <span className="sr-only">{t('languageSwitch')}</span>
+            <select
+              value={language}
+              onChange={(event) => setLanguage(event.target.value as typeof language)}
+              className="bg-eco-panel text-xs text-eco-text outline-none"
+              aria-label={`${t('languageSwitch')}: ${languageLabel}`}
+            >
+              {supportedLanguages.map((locale) => (
+                <option key={locale} value={locale} className="bg-eco-panel text-eco-text">
+                  {locale.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </label>
           <AuthButton onLoginClick={onLoginClick} />
           <button
             className="rounded-md p-1.5 text-eco-muted transition hover:bg-eco-border hover:text-eco-text sm:hidden"
             onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Toggle menu"
+            aria-label={menuOpen ? t('navbarMenuClose') : t('navbarMenuOpen')}
           >
             {menuOpen ? (
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,6 +104,24 @@ export default function Navbar({ route, onLoginClick }: NavbarProps) {
               {link.label}
             </a>
           ))}
+          <label className="mt-2 flex w-full items-center justify-between rounded-md border border-eco-border bg-eco-panel px-3 py-2 text-sm font-medium text-eco-text">
+            <span>{t('languageSwitch')}</span>
+            <select
+              value={language}
+              onChange={(event) => {
+                setLanguage(event.target.value as typeof language)
+                setMenuOpen(false)
+              }}
+              className="bg-eco-panel text-sm text-eco-text outline-none"
+              aria-label={`${t('languageSwitch')}: ${languageLabel}`}
+            >
+              {supportedLanguages.map((locale) => (
+                <option key={locale} value={locale} className="bg-eco-panel text-eco-text">
+                  {locale.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </label>
         </nav>
       )}
     </header>

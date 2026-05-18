@@ -1,4 +1,5 @@
 // ecoroute/src/components/History/FlightHistoryItem.tsx
+import { useLanguage } from '../../context/LanguageContext'
 import type { SavedFlight } from '../../types'
 
 interface FlightHistoryItemProps {
@@ -12,7 +13,8 @@ export default function FlightHistoryItem({
   onClick,
   onDelete,
 }: FlightHistoryItemProps) {
-  const date = new Date(flight.created_at).toLocaleDateString('sv-SE', {
+  const { language, t } = useLanguage()
+  const date = new Date(flight.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-GB', {
     month: 'short',
     day: 'numeric',
   })
@@ -36,7 +38,7 @@ export default function FlightHistoryItem({
           onDelete()
         }}
         className="ml-2 text-eco-muted transition hover:text-red-500"
-        aria-label="Delete"
+        aria-label={t('flightHistoryDelete')}
       >
         ✕
       </button>

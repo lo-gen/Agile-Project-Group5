@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { login, signup } = useAuth()
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (isOpen) setTab(initialTab)
@@ -34,7 +36,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
       }
       onClose()
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : 'An error occurred')
+      setLocalError(err instanceof Error ? err.message : t('loginError'))
     } finally {
       setIsSubmitting(false)
     }
@@ -57,7 +59,7 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                 : 'text-eco-muted hover:text-eco-text'
             }`}
           >
-            Log In
+            {t('loginTabLogIn')}
           </button>
           <button
             onClick={() => {
@@ -70,32 +72,32 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
                 : 'text-eco-muted hover:text-eco-text'
             }`}
           >
-            Sign Up
+            {t('loginTabSignUp')}
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-eco-text">Email</label>
+            <label className="block text-sm font-medium text-eco-text">{t('loginEmail')}</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full rounded-md border border-eco-border bg-eco-bg px-3 py-2 text-eco-text placeholder-eco-muted focus:border-eco-green focus:outline-none"
-              placeholder="you@example.com"
+              placeholder={t('loginEmailPlaceholder')}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-eco-text">Password</label>
+            <label className="block text-sm font-medium text-eco-text">{t('loginPassword')}</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 w-full rounded-md border border-eco-border bg-eco-bg px-3 py-2 text-eco-text placeholder-eco-muted focus:border-eco-green focus:outline-none"
-              placeholder="••••••••"
+              placeholder={t('loginPasswordPlaceholder')}
             />
           </div>
 
@@ -109,14 +111,14 @@ export default function LoginModal({ isOpen, onClose, initialTab = 'login' }: Lo
               disabled={isSubmitting}
               className="flex-1 rounded-md bg-eco-green px-4 py-2 text-sm font-medium text-eco-bg transition hover:opacity-90 disabled:opacity-50"
             >
-              {isSubmitting ? 'Loading...' : tab === 'login' ? 'Log In' : 'Sign Up'}
+              {isSubmitting ? t('authLoading') : tab === 'login' ? t('loginTabLogIn') : t('loginTabSignUp')}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="rounded-md border border-eco-border px-4 py-2 text-sm font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
             >
-              Cancel
+              {t('loginCancel')}
             </button>
           </div>
         </form>

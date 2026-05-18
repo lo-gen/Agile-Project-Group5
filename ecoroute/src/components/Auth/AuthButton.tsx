@@ -1,4 +1,5 @@
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 
 interface AuthButtonProps {
   onLoginClick: () => void
@@ -6,11 +7,12 @@ interface AuthButtonProps {
 
 export default function AuthButton({ onLoginClick }: AuthButtonProps) {
   const { user, isLoading, logout } = useAuth()
+  const { t } = useLanguage()
 
   if (isLoading) {
     return (
       <button disabled className="px-3 py-1.5 text-xs font-medium text-eco-muted">
-        Loading...
+        {t('authLoading')}
       </button>
     )
   }
@@ -23,7 +25,7 @@ export default function AuthButton({ onLoginClick }: AuthButtonProps) {
           onClick={logout}
           className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
         >
-          Log Out
+          {t('authLogOut')}
         </button>
       </div>
     )
@@ -34,7 +36,7 @@ export default function AuthButton({ onLoginClick }: AuthButtonProps) {
       onClick={onLoginClick}
       className="rounded-md border border-eco-border px-3 py-1.5 text-xs font-medium text-eco-text transition hover:border-eco-green hover:text-eco-green"
     >
-      Log In
+      {t('authLogIn')}
     </button>
   )
 }

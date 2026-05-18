@@ -1,12 +1,10 @@
+import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
+
 const FEATURES = [
   {
     icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -15,17 +13,12 @@ const FEATURES = [
         />
       </svg>
     ),
-    title: "Flight Emissions",
-    desc: "Calculate exact CO₂ output per flight using ICAO-certified methodology, cabin class multipliers, and RFI.",
+    titleKey: 'landingFeatureFlightTitle',
+    descKey: 'landingFeatureFlightDesc',
   },
   {
     icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -34,17 +27,12 @@ const FEATURES = [
         />
       </svg>
     ),
-    title: "Greener Alternatives",
-    desc: "Discover lower-emission train and multi-modal routes across Europe as alternatives to flying.",
+    titleKey: 'landingFeatureAlternativesTitle',
+    descKey: 'landingFeatureAlternativesDesc',
   },
   {
     icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -53,17 +41,12 @@ const FEATURES = [
         />
       </svg>
     ),
-    title: "Side-by-Side Compare",
-    desc: "See flights and alternatives together — emissions, distance, and eco-impact all at a glance.",
+    titleKey: 'landingFeatureCompareTitle',
+    descKey: 'landingFeatureCompareDesc',
   },
   {
     icon: (
-      <svg
-        className="h-5 w-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -72,12 +55,10 @@ const FEATURES = [
         />
       </svg>
     ),
-    title: "Journey History",
-    desc: "Log in to save routes, track your total carbon footprint, and monitor your travel habits over time.",
+    titleKey: 'landingFeatureHistoryTitle',
+    descKey: 'landingFeatureHistoryDesc',
   },
-];
-
-import { useAuth } from "../context/AuthContext";
+] as const;
 
 interface LandingPageProps {
   onSignUpClick: () => void;
@@ -86,33 +67,34 @@ interface LandingPageProps {
 
 export default function LandingPage({ onSignUpClick, onLoginClick }: LandingPageProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   return (
     <div className="h-full overflow-y-auto bg-eco-bg text-eco-text">
       {/* Hero */}
       <section className="flex min-h-[55vh] flex-col items-center justify-center px-4 py-24 text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-eco-border px-3 py-1 text-xs font-medium text-eco-green">
-          Sustainable Travel Planner
+          {t('landingBadge')}
         </span>
         <h1 className="mt-6 max-w-2xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-          Travel smarter.
+          {t('landingTitleLine1')}
           <br />
-          <span className="text-eco-green">Know your carbon footprint.</span>
+          <span className="text-eco-green">{t('landingTitleLine2')}</span>
         </h1>
         <p className="mt-5 max-w-lg text-base leading-7 text-eco-muted">
-          Compare emissions from flights, trains and cars across the World.
+          {t('landingDescription')}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <a
             href="#/planner"
             className="rounded-md bg-eco-green px-5 py-2.5 text-sm font-semibold text-eco-bg transition hover:opacity-90"
           >
-            Plan your route →
+            {t('landingPlanRoute')}
           </a>
           <a
             href="#/about"
             className="rounded-md border border-eco-border px-5 py-2.5 text-sm font-medium transition hover:border-eco-green hover:text-eco-green"
           >
-            How it works
+            {t('landingHowItWorks')}
           </a>
         </div>
       </section>
@@ -122,19 +104,19 @@ export default function LandingPage({ onSignUpClick, onLoginClick }: LandingPage
       {/* Features */}
       <section className="mx-auto max-w-5xl px-4 py-16 sm:px-8">
         <h2 className="mb-10 text-center text-xl font-semibold">
-          Why EcoRoute?
+          {t('landingFeaturesTitle')}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f) => (
             <div
-              key={f.title}
+              key={f.titleKey}
               className="rounded-xl border border-eco-border bg-eco-panel p-5 transition hover:border-eco-green/50"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-eco-border bg-eco-bg text-eco-green">
                 {f.icon}
               </div>
-              <h3 className="mt-4 text-sm font-semibold">{f.title}</h3>
-              <p className="mt-2 text-xs leading-5 text-eco-muted">{f.desc}</p>
+              <h3 className="mt-4 text-sm font-semibold">{t(f.titleKey)}</h3>
+              <p className="mt-2 text-xs leading-5 text-eco-muted">{t(f.descKey)}</p>
             </div>
           ))}
         </div>
@@ -145,10 +127,9 @@ export default function LandingPage({ onSignUpClick, onLoginClick }: LandingPage
         <section className="mx-auto max-w-5xl px-4 pb-8 sm:px-8">
           <div className="rounded-2xl border border-eco-green/30 bg-eco-panel p-8 sm:flex sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Save your journeys</h2>
+              <h2 className="text-xl font-semibold">{t('landingSaveJourneysTitle')}</h2>
               <p className="mt-2 max-w-md text-sm text-eco-muted">
-                Create a free account to track your routes, monitor your carbon
-                footprint over time, and revisit past comparisons.
+                {t('landingSaveJourneysDesc')}
               </p>
             </div>
             <div className="mt-6 flex shrink-0 flex-col gap-2 sm:mt-0 sm:ml-8">
@@ -156,13 +137,13 @@ export default function LandingPage({ onSignUpClick, onLoginClick }: LandingPage
                 onClick={onSignUpClick}
                 className="rounded-md bg-eco-green px-5 py-2.5 text-sm font-semibold text-eco-bg transition hover:opacity-90"
               >
-                Create free account
+                {t('landingCreateAccount')}
               </button>
               <button
                 onClick={onLoginClick}
                 className="text-center text-xs text-eco-muted transition hover:text-eco-text"
               >
-                Already have an account? Log in
+                {t('landingAlreadyHaveAccount')}
               </button>
             </div>
           </div>
@@ -173,16 +154,16 @@ export default function LandingPage({ onSignUpClick, onLoginClick }: LandingPage
       <section className="mx-auto max-w-5xl px-4 pb-20 sm:px-8">
         <div className="rounded-2xl border border-eco-border bg-eco-panel p-8 text-center">
           <h2 className="text-2xl font-semibold">
-            Ready to plan a greener journey?
+            {t('landingBottomTitle')}
           </h2>
           <p className="mt-3 text-sm text-eco-muted">
-            Start comparing routes and discover how much CO₂ you can save.
+            {t('landingBottomDesc')}
           </p>
           <a
             href="#/planner"
             className="mt-6 inline-flex rounded-md bg-eco-green px-6 py-2.5 text-sm font-semibold text-eco-bg transition hover:opacity-90"
           >
-            Open the planner →
+            {t('landingOpenPlanner')}
           </a>
         </div>
       </section>

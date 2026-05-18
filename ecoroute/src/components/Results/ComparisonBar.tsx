@@ -1,6 +1,7 @@
 import { useFlightContext } from '../../context/FlightContext'
 import { transportModes } from '../../data/transportModes'
 import { COLOR_FLIGHT } from '../../utils/constants'
+import { useLanguage } from '../../context/LanguageContext'
 
 interface BarItem {
   label: string
@@ -28,6 +29,7 @@ function Bar({ label, co2Kg, maxCo2, color }: BarItem & { maxCo2: number }) {
 
 export default function ComparisonBar() {
   const { state } = useFlightContext()
+  const { t } = useLanguage()
   if (!state.result) return null
 
   const { totalCo2Kg, distanceKm, groupSize } = state.result
@@ -36,9 +38,9 @@ export default function ComparisonBar() {
   const trainMode = transportModes.find((m) => m.id === 'train')!
 
   const bars: BarItem[] = [
-    { label: 'Flight', co2Kg: totalCo2Kg,                                         color: COLOR_FLIGHT    },
-    { label: 'Car',    co2Kg: distanceKm * carMode.emissionPerKm * groupSize,     color: carMode.color   },
-    { label: 'Train',  co2Kg: distanceKm * trainMode.emissionPerKm * groupSize,   color: trainMode.color },
+    { label: t('comparisonFlight'), co2Kg: totalCo2Kg, color: COLOR_FLIGHT },
+    { label: t('comparisonCar'), co2Kg: distanceKm * carMode.emissionPerKm * groupSize, color: carMode.color },
+    { label: t('comparisonTrain'), co2Kg: distanceKm * trainMode.emissionPerKm * groupSize, color: trainMode.color },
   ]
 
   const maxCo2 = Math.max(...bars.map((b) => b.co2Kg))
@@ -46,7 +48,7 @@ export default function ComparisonBar() {
   return (
     <div className="bg-eco-panel border border-eco-border rounded-lg p-4 flex flex-col gap-3">
       <p className="text-xs text-eco-muted uppercase tracking-wider">
-        Mode comparison
+        {t('comparisonTitle')}
       </p>
       {bars.map((bar) => (
         <Bar key={bar.label} {...bar} maxCo2={maxCo2} />

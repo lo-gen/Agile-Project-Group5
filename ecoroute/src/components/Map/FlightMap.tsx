@@ -8,6 +8,7 @@ import {
 } from "react-leaflet";
 import { cities } from "../../data/cities_clean";
 import { useFlightContext } from "../../context/FlightContext";
+import { useLanguage } from "../../context/LanguageContext";
 import type { City } from "../../types";
 import type { RouteSegment } from "../../routePlanner";
 import {
@@ -42,6 +43,7 @@ function cityColor(
 
 export default function FlightMap({ segments }: Props) {
   const { state, setOrigin, setDestination } = useFlightContext();
+  const { t } = useLanguage();
   const { origin, destination } = state;
   const [showAirports, setShowAirports] = useState(false);
 
@@ -120,7 +122,7 @@ export default function FlightMap({ segments }: Props) {
             }}
           >
             <Tooltip direction="top" offset={[0, TOOLTIP_OFFSET_Y]}>
-              Transfer: {city.name} ({city.iata})
+              {t('mapTransferLabel')} {city.name} ({city.iata})
             </Tooltip>
           </CircleMarker>
         ))}
@@ -203,7 +205,7 @@ export default function FlightMap({ segments }: Props) {
         onClick={() => setShowAirports((v) => !v)}
         className="absolute bottom-6 left-4 z-[1000] rounded-md border border-eco-border bg-eco-panel px-3 py-1.5 text-xs font-semibold text-eco-text shadow transition hover:border-eco-green hover:text-eco-green"
       >
-        {showAirports ? "Hide airports" : "Show airports"}
+        {showAirports ? t('mapHideAirports') : t('mapShowAirports')}
       </button>
     </div>
   );
