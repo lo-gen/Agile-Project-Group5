@@ -19,12 +19,11 @@ If the user asks about anything else, politely say:
 """
 
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash",system_instruction = system_instruction)
 
 
 response = model.generate_content(
-    "Explain transformers in simple terms.",
-    system_instruction = system_instruction
+    "Explain transformers in simple terms."
+    
 )
 
-print(response.text)
