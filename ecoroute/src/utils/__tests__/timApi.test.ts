@@ -44,6 +44,13 @@ const sampleFlights = [
     flightNumber: 161,
     departureDate: { year: 2026, month: 5, day: 18 },
   },
+  {
+    origin: "ARN",
+    destination: "JFK",
+    operatingCarrierCode: "DL",
+    flightNumber: 205,
+    departureDate: { year: 2026, month: 5, day: 30 },
+  },
 ];
 
 describe("getFlightEmissions", () => {

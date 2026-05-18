@@ -3,6 +3,7 @@ import RoutePlannerDashboard from "./pages/RoutePlannerDashboard";
 import AboutPage from "./pages/AboutPage";
 import AccountPage from "./pages/AccountPage";
 import LandingPage from "./pages/LandingPage";
+import FlightLookupPage from "./pages/FlightLookupPage";
 import Navbar from "./components/Navbar";
 import LoginModal from "./components/Auth/LoginModal";
 
@@ -35,6 +36,8 @@ export default function App() {
   const page =
     route === "/planner" ? (
       <RoutePlannerDashboard />
+    ) : route === "/flights" ? (
+      <FlightLookupPage />
     ) : route === "/about" ? (
       <AboutPage />
     ) : route === "/account" ? (
