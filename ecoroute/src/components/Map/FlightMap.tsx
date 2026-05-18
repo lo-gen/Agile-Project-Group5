@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -28,6 +27,8 @@ const COLOR_TRANSFER = "#f59e0b";
 
 interface Props {
   segments?: RouteSegment[] | null;
+  showAirports: boolean;
+  onToggleAirports: () => void;
 }
 
 function cityColor(
@@ -40,10 +41,9 @@ function cityColor(
   return COLOR_UNSELECTED;
 }
 
-export default function FlightMap({ segments }: Props) {
+export default function FlightMap({ segments, showAirports, onToggleAirports }: Props) {
   const { state, setOrigin, setDestination } = useFlightContext();
   const { origin, destination } = state;
-  const [showAirports, setShowAirports] = useState(false);
 
   function handleCityClick(city: City) {
     if (city.id === origin?.id) {
@@ -79,10 +79,16 @@ export default function FlightMap({ segments }: Props) {
         zoom={MAP_DEFAULT_ZOOM}
         style={{ height: "100%", width: "100%" }}
         zoomControl={true}
+        maxBounds={[
+          [-100, -220],
+          [100, 220],
+        ]}
+        maxBoundsViscosity={1.0}
       >
         <TileLayer
           attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          noWrap={true}
         />
 
         {showAirports &&
@@ -200,7 +206,7 @@ export default function FlightMap({ segments }: Props) {
 
       <button
         type="button"
-        onClick={() => setShowAirports((v) => !v)}
+        onClick={onToggleAirports}
         className="absolute bottom-6 left-4 z-[1000] rounded-md border border-eco-border bg-eco-panel px-3 py-1.5 text-xs font-semibold text-eco-text shadow transition hover:border-eco-green hover:text-eco-green"
       >
         {showAirports ? "Hide airports" : "Show airports"}
