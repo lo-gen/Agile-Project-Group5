@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { calculateFlightEmissions } from '../emissions'
+import {
+  calculateFlightEmissions,
+  getApiEmissionsGrams,
+  buildFlightEmissionsResultFromApi,
+  calculateCarEmissions,
+  calculateTrainEmissions,
+} from '../emissions'
 import type { City } from '../../types'
 import { CAR_EMISSION_PER_KM, TRAIN_EMISSION_PER_KM, TREE_ABSORPTION_KG_PER_YEAR } from '../../utils/constants'
 
@@ -93,5 +99,89 @@ describe('calculateFlightEmissions', () => {
     expect(zero.totalCo2Kg).toBeCloseTo(baseline.totalCo2Kg, 6)
     expect(negative.totalCo2Kg).toBeCloseTo(baseline.totalCo2Kg, 6)
     expect(decimal.groupSize).toBe(2)
+  })
+})
+
+describe('getApiEmissionsGrams', () => {
+  it('returns economy value for economy cabin', () => {
+    expect(getApiEmissionsGrams({ economy: 100 }, 'economy')).toBe(100)
+  })
+
+  it('returns 0 for economy when economy is undefined', () => {
+    expect(getApiEmissionsGrams({}, 'economy')).toBe(0)
+  })
+
+  it('returns business value for business cabin', () => {
+    expect(getApiEmissionsGrams({ economy: 100, business: 150 }, 'business')).toBe(150)
+  })
+
+  it('falls back to economy when business is undefined', () => {
+    expect(getApiEmissionsGrams({ economy: 100 }, 'business')).toBe(100)
+  })
+
+  it('returns 0 for business when both business and economy are undefined', () => {
+    expect(getApiEmissionsGrams({}, 'business')).toBe(0)
+  })
+
+  it('returns first value for first cabin', () => {
+    expect(getApiEmissionsGrams({ economy: 100, business: 150, first: 200 }, 'first')).toBe(200)
+  })
+
+  it('falls back to business when first is undefined', () => {
+    expect(getApiEmissionsGrams({ economy: 100, business: 150 }, 'first')).toBe(150)
+  })
+
+  it('falls back to economy when first and business are undefined', () => {
+    expect(getApiEmissionsGrams({ economy: 100 }, 'first')).toBe(100)
+  })
+
+  it('returns 0 for first when all classes are undefined', () => {
+    expect(getApiEmissionsGrams({}, 'first')).toBe(0)
+  })
+})
+
+describe('buildFlightEmissionsResultFromApi', () => {
+  it('converts grams per pax to kg and computes totals for one passenger', () => {
+    const result = buildFlightEmissionsResultFromApi(stockholm, london, 'economy', 1, 50000)
+    expect(result.perPersonCo2Kg).toBeCloseTo(50)
+    expect(result.totalCo2Kg).toBeCloseTo(50)
+    expect(result.groupSize).toBe(1)
+    expect(result.cabinClass).toBe('economy')
+  })
+
+  it('scales total emissions by group size', () => {
+    const single = buildFlightEmissionsResultFromApi(stockholm, london, 'economy', 1, 50000)
+    const group  = buildFlightEmissionsResultFromApi(stockholm, london, 'economy', 3, 50000)
+    expect(group.totalCo2Kg).toBeCloseTo(single.totalCo2Kg * 3)
+    expect(group.perPersonCo2Kg).toBeCloseTo(single.perPersonCo2Kg)
+    expect(group.groupSize).toBe(3)
+  })
+
+  it('computes car and train equivalents from total co2', () => {
+    const result = buildFlightEmissionsResultFromApi(stockholm, london, 'economy', 1, 50000)
+    expect(result.equivalentKmByCar).toBeCloseTo(result.totalCo2Kg / CAR_EMISSION_PER_KM)
+    expect(result.equivalentKmByTrain).toBeCloseTo(result.totalCo2Kg / TRAIN_EMISSION_PER_KM)
+  })
+
+  it('computes trees needed to offset (ceiling)', () => {
+    const result = buildFlightEmissionsResultFromApi(stockholm, london, 'economy', 1, 50000)
+    expect(result.treesNeededToOffset).toBe(Math.ceil(result.totalCo2Kg / TREE_ABSORPTION_KG_PER_YEAR))
+  })
+
+  it('includes distance with detour factor', () => {
+    const result = buildFlightEmissionsResultFromApi(stockholm, london, 'economy', 1, 50000)
+    expect(result.distanceKm).toBeGreaterThan(1500)
+  })
+})
+
+describe('calculateCarEmissions', () => {
+  it('throws not implemented', () => {
+    expect(() => calculateCarEmissions(stockholm, london)).toThrow('calculateCarEmissions is not yet implemented')
+  })
+})
+
+describe('calculateTrainEmissions', () => {
+  it('throws not implemented', () => {
+    expect(() => calculateTrainEmissions(stockholm, london)).toThrow('calculateTrainEmissions is not yet implemented')
   })
 })
