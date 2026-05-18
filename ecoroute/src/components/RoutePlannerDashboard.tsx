@@ -134,7 +134,7 @@ export default function RoutePlannerDashboard() {
     >
       <aside
         style={{ width: isMapVisible ? `${sidebarPct}%` : '100%' }}
-        className="flex h-full flex-col gap-4 overflow-y-auto bg-eco-panel p-5 shrink-0"
+        className="flex h-full flex-col gap-4 overflow-y-auto hide-scrollbar bg-eco-panel p-5 shrink-0"
       >
         <header className="space-y-2">
           <div className="flex items-start justify-between gap-2">
