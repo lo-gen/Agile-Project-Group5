@@ -11,18 +11,6 @@ import {
 } from "../../utils/constants";
 
 const COLOR_TRANSFER = "#f59e0b";
-const COUNTRY_GEOJSON_URL =
-  "https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/country-boundaries/ne_110m_admin_0_countries.geojson";
-
-interface CountryFeature {
-  type: string;
-  geometry: { type: string; coordinates: unknown[] };
-  properties: {
-    NAME: string;
-    LABEL_X: number;
-    LABEL_Y: number;
-  };
-}
 
 interface Props {
   segments?: RouteSegment[] | null;
@@ -67,7 +55,6 @@ export default function GlobeMap({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globeRef = useRef<any>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [countries, setCountries] = useState<CountryFeature[]>([]);
   const [cameraAltitude, setCameraAltitude] = useState(DEFAULT_ALTITUDE);
 
   useEffect(() => {
@@ -79,11 +66,6 @@ export default function GlobeMap({
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    fetch(COUNTRY_GEOJSON_URL)
-      .then((r) => r.json())
-      .then((data) => setCountries(data.features));
-  }, []);
 
   useEffect(() => {
     // Globe takes a moment to initialise its OrbitControls after mount
@@ -149,20 +131,7 @@ export default function GlobeMap({
         backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
         atmosphereColor="#4ade80"
         atmosphereAltitude={0.15}
-        polygonsData={countries}
-        polygonGeoJsonGeometry={(d) => (d as CountryFeature).geometry as never}
-        polygonCapColor={() => "rgba(0,0,0,0)"}
-        polygonSideColor={() => "rgba(0,0,0,0)"}
-        polygonStrokeColor={() => "rgba(255,255,255,0.2)"}
-        labelsData={countries}
-        labelLat={(d) => (d as CountryFeature).properties.LABEL_Y}
-        labelLng={(d) => (d as CountryFeature).properties.LABEL_X}
-        labelText={(d) => (d as CountryFeature).properties.NAME}
-        labelSize={0.45}
-        labelDotRadius={0}
-        labelColor={() => "rgba(255,255,255,0.6)"}
-        labelResolution={2}
-        labelAltitude={0.01}
+
         pointsData={pointsData}
         pointLat={(d) => (d as City).lat}
         pointLng={(d) => (d as City).lng}
