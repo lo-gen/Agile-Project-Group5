@@ -1,7 +1,7 @@
 export interface FlightRequest {
     origin: string;
     destination: string;
-    operationCarrierCode: string;
+    operatingCarrierCode: string;
     flightNumber: number;
     departureDate: {
         year: number;
@@ -19,13 +19,13 @@ export interface EmissionsPerPax {
 
 export type ContrailsBucket =
     | 'CONTRAILS_IMPACT_UNSPECIFIED'
-    | 'CONTRAILS_IMPACT_LOW'
+    | 'CONTRAILS_IMPACT_NEGLIGIBLE'
     | 'CONTRAILS_IMPACT_MODERATE'
-    | 'CONTRAILS_IMPACT_HIGH';
+    | 'CONTRAILS_IMPACT_SEVERE';
 
 export interface FlightEmissionResult {
     flight: FlightRequest;
-    emissionGramsPerPax: EmissionsPerPax;
+    emissionsGramsPerPax: EmissionsPerPax;
     source: string;
     contrailsImpactBucket: ContrailsBucket;
 }
