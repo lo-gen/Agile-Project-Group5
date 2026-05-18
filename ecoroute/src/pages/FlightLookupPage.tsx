@@ -13,7 +13,7 @@ const CABIN_CLASSES: { value: CabinClass; label: string }[] = [
 function parseFlightNumber(
   raw: string,
 ): { carrier: string; number: number } | null {
-  const m = raw.trim().match(/^([A-Z]{2,3})\s*(\d{1,4})$/i);
+  const m = raw.trim().match(/^([A-Z0-9]{2,3})\s*(\d{1,4})$/i);
   if (!m) return null;
   return { carrier: m[1].toUpperCase(), number: parseInt(m[2], 10) };
 }
@@ -28,6 +28,34 @@ function fmt(n: number) {
   return n.toLocaleString("en-GB", { maximumFractionDigits: 1 });
 }
 
+function Bar({
+  label,
+  co2Kg,
+  color,
+  maxBar,
+}: {
+  label: string;
+  co2Kg: number;
+  color: string;
+  maxBar: number;
+}) {
+  const pct = maxBar > 0 ? (co2Kg / maxBar) * 100 : 0;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between text-xs text-eco-muted">
+        <span>{label}</span>
+        <span className="font-mono text-eco-text">{fmt(co2Kg)} kg</span>
+      </div>
+      <div className="h-2.5 rounded-full overflow-hidden bg-eco-bg">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ResultSection({ result }: { result: LookupResult }) {
   const { flightCo2Kg, typicalCo2Kg } = result;
   const hasFlight = flightCo2Kg != null;
@@ -35,32 +63,6 @@ function ResultSection({ result }: { result: LookupResult }) {
     ? ((flightCo2Kg! - typicalCo2Kg) / typicalCo2Kg) * 100
     : null;
   const maxBar = Math.max(flightCo2Kg ?? 0, typicalCo2Kg);
-
-  function Bar({
-    label,
-    co2Kg,
-    color,
-  }: {
-    label: string;
-    co2Kg: number;
-    color: string;
-  }) {
-    const pct = maxBar > 0 ? (co2Kg / maxBar) * 100 : 0;
-    return (
-      <div className="flex flex-col gap-1">
-        <div className="flex justify-between text-xs text-eco-muted">
-          <span>{label}</span>
-          <span className="font-mono text-eco-text">{fmt(co2Kg)} kg</span>
-        </div>
-        <div className="h-2.5 rounded-full overflow-hidden bg-eco-bg">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${pct}%`, backgroundColor: color }}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <section className="rounded-xl border border-eco-border bg-eco-panel p-5 space-y-4">
@@ -90,9 +92,9 @@ function ResultSection({ result }: { result: LookupResult }) {
 
       <div className="space-y-3">
         {hasFlight && (
-          <Bar label="This flight" co2Kg={flightCo2Kg!} color="#ef4444" />
+          <Bar label="This flight" co2Kg={flightCo2Kg!} color="#ef4444" maxBar={maxBar} />
         )}
-        <Bar label="Route average" co2Kg={typicalCo2Kg} color="#22c55e" />
+        <Bar label="Route average" co2Kg={typicalCo2Kg} color="#22c55e" maxBar={maxBar} />
       </div>
 
       <div className="border-t border-eco-border pt-3 text-sm text-eco-muted space-y-1">

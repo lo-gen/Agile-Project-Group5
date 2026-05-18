@@ -200,7 +200,7 @@ export default function GlobeMap({
         arcStartLng={(d) => (d as RouteSegment).from.lng}
         arcEndLat={(d) => (d as RouteSegment).to.lat}
         arcEndLng={(d) => (d as RouteSegment).to.lng}
-        arcColor={(d) => (d as RouteSegment).color}
+        arcColor={(d: object) => (d as RouteSegment).color}
         arcAltitudeAutoScale={0.35}
         arcDashLength={0.5}
         arcDashGap={0.2}
