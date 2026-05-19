@@ -10,6 +10,7 @@ interface NavbarProps {
 const BASE_LINKS = [
   { label: "Home", href: "#/" },
   { label: "Planner", href: "#/planner" },
+  { label: "Education", href: "#/education" },
   { label: "About", href: "#/about" },
 ];
 
