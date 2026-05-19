@@ -10,6 +10,7 @@ import TravelClassSelector from './Controls/TravelClassSelector'
 import EmissionsCard from './Results/EmissionsCard'
 import ComparisonBar from './Results/ComparisonBar'
 import FlightLegsCard from './Results/FlightLegsCard'
+import GlobeMap from './Map/GlobeMap'
 import FlightMap from './Map/FlightMap'
 
 function getNearestCity(userLat: number, userLng: number) {
@@ -38,6 +39,8 @@ export default function RoutePlannerDashboard() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [isMapVisible, setIsMapVisible] = useState(true)
+  const [useGlobe, setUseGlobe] = useState(false)
+  const [showAirports, setShowAirports] = useState(false)
   const [sidebarPct, setSidebarPct] = useState(38)
   const planner = useMemo(() => createDefaultRoutePlanner(), [])
 
@@ -252,8 +255,17 @@ export default function RoutePlannerDashboard() {
             className="w-1 shrink-0 cursor-col-resize bg-eco-border transition-colors hover:bg-eco-green/50"
             onMouseDown={() => { isDragging.current = true }}
           />
-          <main className="h-full min-w-0 flex-1">
-            <FlightMap segments={flightSegments} />
+          <main className="relative h-full min-w-0 flex-1">
+            {useGlobe
+              ? <GlobeMap segments={flightSegments} showAirports={showAirports} onToggleAirports={() => setShowAirports(v => !v)} />
+              : <FlightMap segments={flightSegments} showAirports={showAirports} onToggleAirports={() => setShowAirports(v => !v)} />}
+            <button
+              type="button"
+              onClick={() => setUseGlobe(v => !v)}
+              className="absolute right-4 top-4 z-[1000] rounded-md border border-eco-border bg-eco-panel px-3 py-1.5 text-xs font-semibold text-eco-text shadow transition hover:border-eco-green hover:text-eco-green"
+            >
+              {useGlobe ? 'Flat map' : 'Globe'}
+            </button>
           </main>
         </>
       )}
